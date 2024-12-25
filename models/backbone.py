@@ -160,6 +160,8 @@ def get_text_features(args, model_path, backbone_name, classnames):
         ctx = ctx.unsqueeze(0).expand(n_dm, -1, -1, -1)  # dm cls 16 512
 
     dmx = dmx.unsqueeze(1).expand(-1, n_cls, -1, -1)  # dm cls 16 512
+    print(ctx.shape)
+    print(dmx.shape)
     ctxdmx = torch.cat([ctx, dmx],
                     dim=2).reshape(n_cls * n_dm,
                                     n_ctx + n_dmx, ctx_dim)
