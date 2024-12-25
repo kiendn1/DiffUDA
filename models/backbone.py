@@ -106,7 +106,6 @@ def get_text_features(args, model_path, backbone_name, classnames):
     n_dmx = 16
     n_ctx = 16
     n_cls = len(classnames)
-    csc = True
     n = n_dmx + n_ctx
 
     clip_model = load_clip_to_cpu(backbone_name)
@@ -152,16 +151,8 @@ def get_text_features(args, model_path, backbone_name, classnames):
     ctx = ctx_vectors
     ctx_dim = ctx.size(-1)
     dmx = domain_vectors  # dm 16 512
-    if ctx.dim() == 2:
-        ctx = ctx.unsqueeze(0).expand(n_dm, -1, -1)  # dm 16 512
-    if csc:
-        ctx = ctx.unsqueeze(1).expand(-1, n_cls, -1, -1)  # dm cls 16 512
-    else:
-        ctx = ctx.unsqueeze(0).expand(n_dm, -1, -1, -1)  # dm cls 16 512
-
+    ctx = ctx.unsqueeze(0).expand(n_dm, -1, -1, -1)  # dm 16 512
     dmx = dmx.unsqueeze(1).expand(-1, n_cls, -1, -1)  # dm cls 16 512
-    print(ctx.shape)
-    print(dmx.shape)
     ctxdmx = torch.cat([ctx, dmx],
                     dim=2).reshape(n_cls * n_dm,
                                     n_ctx + n_dmx, ctx_dim)
