@@ -208,7 +208,7 @@ class CustomCLIP(nn.Module):
         self.args = args
         self.logit_scale = model.logit_scale
         self.dtype = model.dtype
-        model_path = f'/kaggle/input/cp-dapl/cp-daprompt/{args.src_domain.lower()[0]}2{args.tgt_domain.lower()[0]}_model.pth.tar-25'
+        model_path = f'/kaggle/input/cp-dapl/cp-daprompt/{args.src_domain.lower()[0]}2{args.tgt_domain.lower()[0]}_s42_model.pth.tar-25'
         self.text_features = get_text_features(args, model_path, "ViT-B/16", classnames).cuda()
 
     def forward_features(self, x):
