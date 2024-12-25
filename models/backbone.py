@@ -98,7 +98,7 @@ def get_text_features(args, model_path, backbone_name, classnames):
 
     if "token_suffix" in state_dict:
         del state_dict["token_suffix"]
-    ctx_vectors = state_dict['ctx_vectors']
+    ctx_vectors = state_dict['ctx']
     domain_vectors = state_dict['domain_vectors']
 
 
