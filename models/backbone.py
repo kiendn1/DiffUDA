@@ -175,16 +175,17 @@ def get_text_features(args, model_path, backbone_name, classnames):
     prompts = prompts.reshape(195,1,77,512)
     tokenized_prompts = tokenized_prompts.reshape(195,1,77)
     list_r = []
-    for i in range(195):
-        x = prompts[i] + clip_model.positional_embedding.type(dtype)
-        x = x.permute(1, 0, 2)  # NLD -> LND
-        x = clip_model.transformer(x)
-        x = x.permute(1, 0, 2)  # LND -> NLD
-        x = clip_model.ln_final(x).type(dtype)
-        x = x[torch.arange(x.shape[0]), tokenized_prompts[i].argmax(dim=-1)] @ clip_model.text_projection
-        list_r.append(x)
-    text_features = torch.cat(list_r, dim=0)
-    text_features = text_features / text_features.norm(dim=-1, keepdim=True)
+    with torch.no_grad():
+        for i in range(195):
+            x = prompts[i] + clip_model.positional_embedding.type(dtype)
+            x = x.permute(1, 0, 2)  # NLD -> LND
+            x = clip_model.transformer(x)
+            x = x.permute(1, 0, 2)  # LND -> NLD
+            x = clip_model.ln_final(x).type(dtype)
+            x = x[torch.arange(x.shape[0]), tokenized_prompts[i].argmax(dim=-1)] @ clip_model.text_projection
+            list_r.append(x)
+        text_features = torch.cat(list_r, dim=0)
+        text_features = text_features / text_features.norm(dim=-1, keepdim=True)
 
     return text_features
 
@@ -208,7 +209,7 @@ class CustomCLIP(nn.Module):
         self.logit_scale = model.logit_scale
         self.dtype = model.dtype
         model_path = f'/kaggle/input/cp-dapl/cp-daprompt/{args.src_domain.lower()[0]}2{args.tgt_domain.lower()[0]}_model.pth.tar-25'
-        self.text_features = get_text_features(args, model_path, "ViT-B/16", classnames).detach().cuda()
+        self.text_features = get_text_features(args, model_path, "ViT-B/16", classnames).cuda()
 
     def forward_features(self, x):
         feature = self.model.visual(x.type(self.dtype))
