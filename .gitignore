@@ -1,0 +1,13 @@
+__pycache__/
+
+# Ignore log folder
+log/
+scripts/
+Office Home/
+images/
+.vscode/
+test/
+vizualize/
+experiment/
+office_home/
+exp/
