@@ -100,6 +100,8 @@ def get_text_features(args, model_path, backbone_name, classnames):
         del state_dict["token_suffix"]
     ctx_vectors = state_dict['ctx']
     domain_vectors = state_dict['domain_vectors']
+    print(ctx_vectors.device)
+    print(domain_vectors.device)
 
 
     n_dm = 2
@@ -162,9 +164,6 @@ def get_text_features(args, model_path, backbone_name, classnames):
 
     # naive
     neb = naive_embedding
-    print(prefix.device)
-    print(ctxdmx.device)
-    print(suffix.device)
 
     prompts = torch.cat(
         [
