@@ -140,13 +140,26 @@ def get_model(args):
 def predict(target_test_loader, model, args):
     model.eval()
     list_r = []
+    first_test = True
     with torch.no_grad():
         for data, target in tqdm(iterable=target_test_loader):
             data, target = data.to(args.device), target.to(args.device)
             s_output = model.clip_predict(data)
             list_r.append(s_output)
-    result = torch.cat(list_r, dim = 0)
-    torch.save(result, '/kaggle/working/k.pt')
+            # result = torch.cat(list_r, dim = 0)
+            # torch.save(result, '/kaggle/working/k.pt')
+            pred = torch.max(s_output, 1)[1]
+            if first_test:
+                all_pred = pred
+                all_label = target
+                first_test = False
+            else:
+                all_pred = torch.cat((all_pred, pred), 0)
+                all_label = torch.cat((all_label, target), 0)
+    acc = torch.sum(torch.squeeze(all_pred).float() == all_label) / float(all_label.size()[0]) * 100
+
+    print('CLIP: test_acc: {:.4f}'.format(acc))
+    
 
 
 def main():
