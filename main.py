@@ -139,7 +139,7 @@ def load_data(args):
     return source_loader, target_train_loader, target_test_loader, gen_loader, gen_loader_flux, n_class
 
 def get_model(args):
-    model = TransferNet(args).to(args.device)
+    model = TransferNet(args)
     return model
 
 
@@ -162,7 +162,7 @@ def test(model, target_test_loader, args):
     desc = "Clip Testing..." if args.clip else "Testing..."
     with torch.no_grad():
         for data, target, _ in tqdm(iterable=target_test_loader,desc=desc):
-            data, target = data.to(args.device), target.to(args.device)
+            data, target = data, target
             if args.clip:
                 s_output = model.clip_predict(data)
             else:
@@ -207,7 +207,7 @@ def obtain_label(model,loader,e,args):
     classes_num = [0 for _ in range(65)]
     with torch.no_grad():
         for data, _ in loader:
-            data = data.to(args.device)
+            data = data
             s_output = model.predict(data)
             preds = torch.max(s_output, 1)[1]
             for pred in preds:
@@ -249,7 +249,7 @@ def train(source_loader, gendata_loader, target_train_loader, target_test_loader
         for _ in tqdm(iterable=range(n_batch),desc=f"Train:[{e}/{args.n_epoch}]"):
             optimizer.zero_grad()
             data_source, label_source, _ = next(iter_source) # .next()
-            data_source, label_source = data_source.to(args.device), label_source.to(args.device)
+            data_source, label_source = data_source, label_source
             if args.gendata_dir:
                 data_gen_st, label_gen_st, _ = next(iter_gen)
             if hasattr(args, 'folder_gen_flux'):
@@ -258,22 +258,22 @@ def train(source_loader, gendata_loader, target_train_loader, target_test_loader
             if hasattr(args,'folder_gen_flux') and args.gendata_dir:
                 data_gen = torch.cat((data_gen_st, data_gen_flux), dim=0)
                 label_gen = torch.cat((label_gen_st, label_gen_flux), dim=0)
-                data_gen, label_gen = data_gen.to(args.device), label_gen.to(args.device)
+                data_gen, label_gen = data_gen, label_gen
             elif hasattr(args, 'folder_gen_flux'):
                 data_gen, label_gen = data_gen_flux, label_gen_flux
-                data_gen, label_gen = data_gen.to(args.device), label_gen.to(args.device)
+                data_gen, label_gen = data_gen, label_gen
             elif args.gendata_dir:
                 data_gen, label_gen = data_gen_st, label_gen_st
-                data_gen, label_gen = data_gen.to(args.device), label_gen.to(args.device)
+                data_gen, label_gen = data_gen, label_gen
             else:
                 data_gen, label_gen = None, None
             data_target, _, tgt_index = next(iter_target) # .next()
             data_target_strong = None
             if args.fixmatch:
                 data_target, data_target_strong = data_target[0], data_target[1]
-                data_target, data_target_strong = data_target.to(args.device), data_target_strong.to(args.device)
+                data_target, data_target_strong = data_target, data_target_strong
             else:
-                data_target = data_target.to(args.device)
+                data_target = data_target
             if args.use_amp:
                 # mixture precision
                 with autocast():

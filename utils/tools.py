@@ -88,4 +88,4 @@ def load_checkpoint(model, args):
         checkpoints = torch.load(checkpoint_dir, map_location="cpu")
         model.base_network.model.visual.load_state_dict(checkpoints["backbone_state_dict"])
         model.classifier_layer.load_state_dict(checkpoints["head_state_dict"])
-    return model.to(args.device)
+    return model

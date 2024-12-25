@@ -6,7 +6,6 @@ import logging
 import torch.nn.functional as F
 import copy
 import numpy as np
-from utils.calculate_prototype import init_prototype, calculate_mean_vector_by_label, calculate_mean_vector_by_output
 
 _logger = logging.getLogger(__name__)
 
@@ -78,7 +77,7 @@ class TransferNet(nn.Module):
         # get the feature extractor and the pretrained head
         self.args = args
         self.num_class = args.num_class
-        self.base_network = get_backbone(args).cuda()
+        self.base_network = get_backbone(args)
         # self.teacher_model = copy.deepcopy(self.base_network)
         # self.teacher_model.eval()
 
@@ -125,7 +124,7 @@ class TransferNet(nn.Module):
             if tgt_index is None:
                 target_clip_logits = self.base_network.forward_head(target_feat)
             else:
-                target_clip_logits = torch.from_numpy(preds_target[tgt_index]).cuda()
+                target_clip_logits = torch.from_numpy(preds_target[tgt_index])
             target_logits = self.classifier_layer(target_feat)
             # calculate calibrated gini impurity loss Lcgi
             transfer_loss, target_pred_mix = self.cmkd(target_logits, target_clip_logits, source_logits_clip, source_label,label_set)
@@ -179,8 +178,8 @@ class TransferNet(nn.Module):
                 one_hot_gen_gt_label = one_hot_encoding(gen_label, num_classes=65)
                 # generate mixed sample
                 lam = np.random.beta(args.beta, args.beta)
-                rand_index = torch.randperm(target_img.size()[0]).cuda()
-                mix_img = target_img.clone().detach().cuda()
+                rand_index = torch.randperm(target_img.size()[0])
+                mix_img = target_img.clone().detach()
                 bby1, bby2, bbx1, bbx2 = rand_bbox(mix_img.size(), lam)
                 mix_img[:, :, bby1:bby2, bbx1:bbx2] = gen_img[rand_index, :, bby1:bby2, bbx1:bbx2]
                 # adjust lambda to exactly match pixel ratio
@@ -199,7 +198,7 @@ class TransferNet(nn.Module):
             if args.gamma > 0 and r < args.resizemix_prob:
                 one_hot_gen_gt_label = one_hot_encoding(gen_label, num_classes=65)
                 # one_hot_src_gt_label = one_hot_encoding(source_label, num_classes=65)
-                mix_img = target_img.clone().detach().cuda()
+                mix_img = target_img.clone().detach()
 
                 lam = np.random.beta(args.gamma, args.gamma)
                 lam = lam * (args.lam_max - args.lam_min) + args.lam_min
@@ -242,12 +241,12 @@ class TransferNet(nn.Module):
                 else:
                     lam = 1
                 batch_size = gen_img.size()[0]
-                index = torch.randperm(batch_size).cuda()
+                index = torch.randperm(batch_size)
                 target_a = target_pred_mix
                 target_b = gen_label[index]
                 
                 batch_size = target_a.size()[0]
-                index = torch.randperm(batch_size).cuda()
+                index = torch.randperm(batch_size)
                 mix_img = lam * target_img + (1 - lam) * gen_img[index, :]
                 
                 # compute output

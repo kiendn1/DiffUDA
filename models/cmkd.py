@@ -5,7 +5,7 @@ from utils.tools import LambdaSheduler
 
 def feat_prototype_distance_module(feat, prototypes, class_numbers):
     N, D = feat.shape
-    feat_proto_distance = -torch.ones((N, class_numbers)).cuda()
+    feat_proto_distance = -torch.ones((N, class_numbers))
     for i in range(class_numbers):
         feat_proto_distance[:, i] = torch.norm(prototypes[i].unsqueeze(0) - feat, 2, dim=1,)
     return feat_proto_distance
