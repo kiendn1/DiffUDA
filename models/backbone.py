@@ -162,6 +162,9 @@ def get_text_features(args, model_path, backbone_name, classnames):
 
     # naive
     neb = naive_embedding
+    print(prefix.device)
+    print(ctxdmx.device)
+    print(suffix.device)
 
     prompts = torch.cat(
         [
