@@ -1,7 +1,6 @@
 import copy
 import time
 import torch
-import ssl
 import random
 from sklearn import metrics
 import numpy as np
@@ -15,9 +14,6 @@ from models import rst
 import logging
 import json
 
-from torch.cuda.amp import GradScaler, autocast
-ssl._create_default_https_context = ssl._create_unverified_context
-scaler = GradScaler()
 def get_parser():
     """Get default arguments."""
     parser = configargparse.ArgumentParser(
@@ -273,12 +269,7 @@ def train(source_loader, gendata_loader, target_train_loader, target_test_loader
                 data_target = data_target.to(args.device)
             if args.use_amp:
                 # mixture precision
-                with autocast():
-                    clf_loss, transfer_loss = model(args, data_source, data_gen, data_target, label_source, label_gen, data_target_strong)
-                    loss = clf_loss + transfer_loss
-                scaler.scale(loss).backward()
-                scaler.step(optimizer)
-                scaler.update()
+                pass
             else:
                 # fully precision
                 clf_loss, transfer_loss = model(args, data_source, data_gen, data_target, label_source, label_gen, data_target_strong, label_set)
