@@ -14,6 +14,8 @@ import os
 from models import rst
 import logging
 import json
+from accelerate import Accelerator
+from accelerate.utils import set_seed
 
 from torch.cuda.amp import GradScaler, autocast
 ssl._create_default_https_context = ssl._create_unverified_context
@@ -216,7 +218,7 @@ def obtain_label(model,loader,e,args):
             class_set.append(c)
     return class_set
 
-def train(source_loader, gendata_loader, target_train_loader, target_test_loader, model, optimizer, scheduler, args, gendata_loader_flux):
+def train(accelerator, source_loader, gendata_loader, target_train_loader, target_test_loader, model, optimizer, scheduler, args, gendata_loader_flux):
     logging.basicConfig(filename=os.path.join(args.log_dir,'training.log'), level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
     n_batch = args.n_iter_per_epoch
     iter_source, iter_target = iter(source_loader), iter(target_train_loader)
@@ -283,7 +285,7 @@ def train(source_loader, gendata_loader, target_train_loader, target_test_loader
                 # fully precision
                 clf_loss, transfer_loss = model(args, data_source, data_gen, data_target, label_source, label_gen, data_target_strong, label_set)
                 loss = clf_loss + transfer_loss
-                loss.backward()
+                accelerator.backward(loss)
                 optimizer.step()
 
             if args.rst:
@@ -325,14 +327,15 @@ def train(source_loader, gendata_loader, target_train_loader, target_test_loader
 def main():
     parser = get_parser()
     args = parser.parse_args()
-    set_random_seed(args.seed)
+    # set_random_seed(args.seed)
+    set_seed(args.seed)
+    accelerator = Accelerator()
     if args.use_img2img:
         name_folder = args.src_domain[0]+'2'+args.tgt_domain[0]
         setattr(args, "folder_gen_flux", '/home/user/code/DiffUDA/images/flux/'+name_folder)
     source_loader, target_train_loader, target_test_loader, gendata_loader, gendata_loader_flux, num_class = load_data(args)
     setattr(args, "num_class", num_class)
     setattr(args, "max_iter", 15000)
-    # log_dir = f'log/200_32_text2img_resizemix_quality_threshold_09/{args.model_name}/{args.datasets}/{args.src_domain}2{args.tgt_domain}'
     log_dir = f'log/200_32_text2img_dapl_training/{args.model_name}/{args.datasets}/{args.src_domain}2{args.tgt_domain}'
     if not os.path.exists(log_dir):
         os.makedirs(log_dir)
@@ -342,13 +345,15 @@ def main():
         json.dump(vars(args), json_file, indent=4)
     setattr(args, "device", torch.device('cuda' if torch.cuda.is_available() else 'cpu'))
     model = get_model(args)
-    # print(model)
     optimizer = get_optimizer(model, args)
 
     if args.scheduler:
         scheduler = get_lr_scheduler(optimizer,args)
     else:
         scheduler = None
+    model, optimizer, source_loader, target_train_loader, gendata_loader = accelerator.prepare(
+        model, optimizer, source_loader, target_train_loader, gendata_loader, scheduler
+    )
     print(f"Base Network: {args.model_name}")
     print(f"Source Domain: {args.src_domain}")
     print(f"Target Domain: {args.tgt_domain}")
@@ -359,7 +364,7 @@ def main():
     if args.clip:
         test(model, target_test_loader, args)
     else:
-        train(source_loader, gendata_loader, target_train_loader, target_test_loader, model, optimizer, scheduler, args, gendata_loader_flux)
+        train(accelerator, source_loader, gendata_loader, target_train_loader, target_test_loader, model, optimizer, scheduler, args, gendata_loader_flux)
     
 
 if __name__ == "__main__":
