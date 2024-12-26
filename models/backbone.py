@@ -224,7 +224,7 @@ class CustomCLIP(nn.Module):
         image_features = image_features / image_features.norm(dim=1, keepdim=True)
 
         logit_scale = self.logit_scale.exp()
-        logits_per_image = logit_scale.to(image_features.device) * image_features @ self.text_features.t()
+        logits_per_image = logit_scale.to(image_features.device) * image_features @ (self.text_features.t().to(image_features.device))
         logits_per_image = logits_per_image.reshape(
             -1, 3, 65)
         if src_image:
