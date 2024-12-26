@@ -352,7 +352,7 @@ def main(args=None):
         scheduler = get_lr_scheduler(optimizer,args)
     else:
         scheduler = None
-    model, optimizer, source_loader, target_train_loader, target_test_loader, gendata_loader = accelerator.prepare(
+    model, optimizer, source_loader, target_train_loader, target_test_loader, gendata_loader, scheduler = accelerator.prepare(
         model, optimizer, source_loader, target_train_loader, target_test_loader, gendata_loader, scheduler
     )
     print(f"Base Network: {args.model_name}")
