@@ -324,9 +324,10 @@ def train(accelerator, source_loader, gendata_loader, target_train_loader, targe
     tqdm.write('Transfer result: {:.4f}'.format(best_acc))
 
 
-def main(args):
-    # parser = get_parser()
-    # args = parser.parse_args()
+def main(args=None):
+    if args is None:
+        parser = get_parser()
+        args = parser.parse_args()
     # set_random_seed(args.seed)
     set_seed(args.seed)
     accelerator = Accelerator()
