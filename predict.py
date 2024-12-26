@@ -155,7 +155,7 @@ def predict(target_test_loader, model, args):
                 all_pred = torch.cat((all_pred, pred), 0)
                 all_label = torch.cat((all_label, target), 0)
     result = torch.cat(list_r, dim = 0)
-    torch.save(result, f'/kaggle/working/{args.src_domain.lower()[0]}2{args.tgt_domain.lower()[0]}.pt')
+    torch.save(result, f'/kaggle/working/{args.src_domain.lower()[0]}2{args.tgt_domain.lower()[0]}_{int(args.use_dapl)}.pt')
     acc = torch.sum(torch.squeeze(all_pred).float() == all_label) / float(all_label.size()[0]) * 100
 
     print('CLIP: test_acc: {:.4f}'.format(acc))
