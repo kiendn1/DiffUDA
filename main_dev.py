@@ -344,7 +344,7 @@ def main(args=None):
     filename = f'{log_dir}/config.json'
     with open(filename, 'w') as json_file:
         json.dump(vars(args), json_file, indent=4)
-    setattr(args, "device", torch.device('cuda' if torch.cuda.is_available() else 'cpu'))
+    # setattr(args, "device", torch.device('cuda' if torch.cuda.is_available() else 'cpu'))
     model = get_model(args)
     optimizer = get_optimizer(model, args)
 
