@@ -124,7 +124,7 @@ class TransferNet(nn.Module):
             if tgt_index is None:
                 target_clip_logits = self.base_network.forward_head(target_feat)
             else:
-                target_clip_logits = torch.from_numpy(preds_target[tgt_index.cpu()])
+                target_clip_logits = preds_target[tgt_index]
             target_logits = self.classifier_layer(target_feat)
             # calculate calibrated gini impurity loss Lcgi
             transfer_loss, target_pred_mix = self.cmkd(target_logits, target_clip_logits, source_logits_clip, source_label,label_set)

@@ -236,6 +236,7 @@ def train(accelerator, source_loader, gendata_loader, target_train_loader, targe
         iter_gen_flux = None
     
     preds_target = np.load("/kaggle/working/SWG/Predictions/DAPL/OH/ViT/" + args.src_domain.lower()[0] + "2" + args.tgt_domain.lower()[0] + "_target_42.npy")
+    preds_target = torch.from_numpy(preds_target)
     best_acc = 0
     for e in range(1, args.n_epoch+1):
         if args.pda:
