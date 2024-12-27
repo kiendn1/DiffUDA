@@ -55,6 +55,7 @@ def get_parser():
     parser.add_argument('--pda', default=False, action='store_true')
     parser.add_argument('--rst', default=False, action='store_true')
     parser.add_argument('--clip', default=False, action='store_true')
+    parser.add_argument('--use_dapl', default=False, action='store_true')
 
     # FixMatch
     parser.add_argument('--fixmatch', default=False, action='store_true')
