@@ -16,6 +16,7 @@ import logging
 import json
 from accelerate import Accelerator
 from accelerate.utils import set_seed
+import pynvml
 
 from torch.cuda.amp import GradScaler, autocast
 ssl._create_default_https_context = ssl._create_unverified_context
@@ -219,6 +220,7 @@ def obtain_label(model,loader,e,args):
     return class_set
 
 def train(accelerator, source_loader, gendata_loader, target_train_loader, target_test_loader, model, optimizer, scheduler, args, gendata_loader_flux):
+    pynvml.nvmlInit()
     logging.basicConfig(filename=os.path.join(args.log_dir,'training.log'), level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
     n_batch = args.n_iter_per_epoch
     iter_source, iter_target = iter(source_loader), iter(target_train_loader)
@@ -245,7 +247,13 @@ def train(accelerator, source_loader, gendata_loader, target_train_loader, targe
         train_loss_transfer = AverageMeter()
         train_loss_total = AverageMeter()
 
-        for _ in tqdm(iterable=range(n_batch),desc=f"Train:[{e}/{args.n_epoch}]"):
+        for i in tqdm(iterable=range(n_batch),desc=f"Train:[{e}/{args.n_epoch}]"):
+            if i % 20 == 0:
+                device_count = pynvml.nvmlDeviceGetCount()
+                for num in range(device_count):
+                    handle = pynvml.nvmlDeviceGetHandleByIndex(num)
+                    info = pynvml.nvmlDeviceGetMemoryInfo(handle)
+                    print(f"GPU {num}: {info.used / 1024**2:.2f} MB used out of {info.total / 1024**2:.2f} MB")
             optimizer.zero_grad()
             data_source, label_source = next(iter_source) # .next()
             data_source, label_source = data_source, label_source
