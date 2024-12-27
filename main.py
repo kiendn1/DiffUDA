@@ -171,7 +171,9 @@ def test(model, target_test_loader, args):
             if args.clip:
                 s_output = model.clip_predict(data)
             else:
-                s_output = model.predict(data)
+                features = model.base_network.forward_features(data)
+                s_output = model.classifier_layer(features)
+                # s_output = model.predict(data)
             loss = criterion(s_output, target)
             test_loss.update(loss.item())
             pred = torch.max(s_output, 1)[1]
