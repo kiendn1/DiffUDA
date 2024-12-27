@@ -119,13 +119,13 @@ def load_data(args):
     folder_gen = args.gendata_dir
     if folder_gen:
         gen_loader, n_class = data_loader.load_data(
-            args, folder_gen, 32, infinite_data_loader=True, train=True, weight_sampler=False, num_workers=args.num_workers, folder_src=None)
+            args, folder_gen, 16, infinite_data_loader=True, train=True, weight_sampler=False, num_workers=args.num_workers, folder_src=None)
     else:
         gen_loader = None
     
     if hasattr(args, 'folder_gen_flux'):
         gen_loader_flux, n_class = data_loader.load_data(
-                args, args.folder_gen_flux, 32, infinite_data_loader=True, train=True, num_workers=args.num_workers)
+                args, args.folder_gen_flux, 16, infinite_data_loader=True, train=True, num_workers=args.num_workers)
     else:
         gen_loader_flux = None
     
