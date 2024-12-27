@@ -38,8 +38,8 @@ class CMKD(nn.Module):
                 self.args.lambda2*F.cross_entropy(kwargs['gen_logit_clip'], kwargs['gen_label']) + \
                 self.args.lambda3*lamb*self.gini_impurity(target_pred_clip)
         else:
-            return self.args.lambda2*F.cross_entropy(source_logit_clip, source_label) + \
-                self.args.lambda3*lamb*self.gini_impurity(target_pred_clip)
+            return self.args.lambda2*F.cross_entropy(source_logit_clip, source_label) 
+                # self.args.lambda3*lamb*self.gini_impurity(target_pred_clip)
 
     def forward(self, target_logit, target_logit_clip, source_logit_clip, source_label, label_set=None, prototypes=None, target_feat=None, 
                 use_contrastive_loss=None, gen_feat=None, gen_label=None, source_feat=None, **kwargs):

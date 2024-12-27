@@ -230,7 +230,7 @@ def train(source_loader, gendata_loader, target_train_loader, target_test_loader
     else:
         iter_gen_flux = None
     
-    preds_target = np.load("/home/user/code/SWG/Predictions/DAPL/OH/ViT/" + args.src_domain.lower()[0] + "2" + args.tgt_domain.lower()[0] + "_target_42.npy")
+    preds_target = np.load("/kaggle/working/SWG/Predictions/DAPL/OH/ViT/" + args.src_domain.lower()[0] + "2" + args.tgt_domain.lower()[0] + "_target_42.npy")
     print(preds_target.shape)
     best_acc = 0
     for e in range(1, args.n_epoch+1):
