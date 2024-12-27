@@ -330,8 +330,11 @@ def main(args=None):
         args = parser.parse_args()
     # set_random_seed(args.seed)
     set_seed(args.seed)
-    from accelerate import DistributedDataParallelKwargs
-    accelerator = Accelerator(kwargs_handlers=DistributedDataParallelKwargs(find_unused_parameters=True))
+    from accelerate import Accelerator
+    from accelerate.utils import DistributedDataParallelKwargs
+
+    kwargs = DistributedDataParallelKwargs(find_unused_parameters=True)
+    accelerator = Accelerator(kwargs_handlers=[kwargs])
     if args.use_img2img:
         name_folder = args.src_domain[0]+'2'+args.tgt_domain[0]
         setattr(args, "folder_gen_flux", '/home/user/code/DiffUDA/images/flux/'+name_folder)
