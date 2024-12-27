@@ -171,9 +171,7 @@ def test(model, target_test_loader, args):
             if args.clip:
                 s_output = model.clip_predict(data)
             else:
-                features = model.base_network.forward_features(data)
-                s_output = model.classifier_layer(features)
-                # s_output = model.predict(data)
+                s_output = model(None, None, None, data, None, None, test=True)
             loss = criterion(s_output, target)
             test_loss.update(loss.item())
             pred = torch.max(s_output, 1)[1]
@@ -226,6 +224,7 @@ def obtain_label(model,loader,e,args):
 
 def train(accelerator, source_loader, gendata_loader, target_train_loader, target_test_loader, model, optimizer, scheduler, args, gendata_loader_flux):
     logging.basicConfig(filename=os.path.join(args.log_dir,'training.log'), level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+    test(model, target_test_loader, args)
     n_batch = args.n_iter_per_epoch
     iter_source, iter_target = iter(source_loader), iter(target_train_loader)
     if args.gendata_dir:
