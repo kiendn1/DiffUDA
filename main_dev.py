@@ -313,9 +313,9 @@ def train(accelerator, source_loader, gendata_loader, target_train_loader, targe
             dsp = rst.dsp_calculation(model)
             info += ', dsp: {:.4f}'.format(dsp)
 
-        if best_acc < test_acc:
-            best_acc = test_acc
-            save_model(model,args)
+        # if best_acc < test_acc:
+        #     best_acc = test_acc
+        #     save_model(model,args)
 
         logging.info(info)
         tqdm.write(info)
@@ -330,7 +330,8 @@ def main(args=None):
         args = parser.parse_args()
     # set_random_seed(args.seed)
     set_seed(args.seed)
-    accelerator = Accelerator()
+    from accelerate import DistributedDataParallelKwargs
+    accelerator = Accelerator(kwargs_handlers=DistributedDataParallelKwargs(find_unused_parameters=True))
     if args.use_img2img:
         name_folder = args.src_domain[0]+'2'+args.tgt_domain[0]
         setattr(args, "folder_gen_flux", '/home/user/code/DiffUDA/images/flux/'+name_folder)
