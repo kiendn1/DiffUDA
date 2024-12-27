@@ -126,7 +126,7 @@ def load_data(args):
         gen_loader_flux, n_class = 0, 0
     
     source_loader, n_class = data_loader.load_data(
-        args, folder_src, 16, infinite_data_loader=True, train=True, num_workers=args.num_workers)
+        args, folder_src, 32, infinite_data_loader=True, train=True, num_workers=args.num_workers)
     target_train_loader, _ = data_loader.load_data(
         args, folder_tgt, 32, infinite_data_loader=True, train=True, use_fixmatch=use_fixmatch, num_workers=args.num_workers, partial=args.pda)
     target_test_loader, _ = data_loader.load_data(
