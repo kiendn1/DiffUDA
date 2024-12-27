@@ -25,7 +25,7 @@ multiple_lr_classifier: 1000
 
 # Training related
 n_iter_per_epoch: 500
-n_epoch: 30
+n_epoch: 20
 
 # Others
 seed: 42

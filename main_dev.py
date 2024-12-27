@@ -322,8 +322,7 @@ def main():
         setattr(args, "folder_gen_flux", '/home/user/code/DiffUDA/images/flux/'+name_folder)
     source_loader, target_train_loader, target_test_loader, gendata_loader, gendata_loader_flux, num_class = load_data(args)
     setattr(args, "num_class", num_class)
-    setattr(args, "max_iter", 15000)
-    # log_dir = f'log/200_32_text2img_resizemix_quality_threshold_09/{args.model_name}/{args.datasets}/{args.src_domain}2{args.tgt_domain}'
+    setattr(args, "max_iter", 10000)
     log_dir = f'log/200_32_text2img_dapl_training/{args.model_name}/{args.datasets}/{args.src_domain}2{args.tgt_domain}'
     if not os.path.exists(log_dir):
         os.makedirs(log_dir)
