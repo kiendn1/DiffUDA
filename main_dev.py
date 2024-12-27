@@ -248,12 +248,12 @@ def train(accelerator, source_loader, gendata_loader, target_train_loader, targe
         train_loss_total = AverageMeter()
 
         for i in tqdm(iterable=range(n_batch),desc=f"Train:[{e}/{args.n_epoch}]"):
-            if i % 20 == 0:
-                device_count = pynvml.nvmlDeviceGetCount()
-                for num in range(device_count):
-                    handle = pynvml.nvmlDeviceGetHandleByIndex(num)
-                    info = pynvml.nvmlDeviceGetMemoryInfo(handle)
-                    print(f"GPU {num}: {info.used / 1024**2:.2f} MB used out of {info.total / 1024**2:.2f} MB")
+            # if i % 20 == 0:
+            #     device_count = pynvml.nvmlDeviceGetCount()
+            #     for num in range(device_count):
+            #         handle = pynvml.nvmlDeviceGetHandleByIndex(num)
+            #         info = pynvml.nvmlDeviceGetMemoryInfo(handle)
+            #         print(f"GPU {num}: {info.used / 1024**2:.2f} MB used out of {info.total / 1024**2:.2f} MB")
             optimizer.zero_grad()
             data_source, label_source = next(iter_source) # .next()
             data_source, label_source = data_source, label_source
