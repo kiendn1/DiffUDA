@@ -223,18 +223,18 @@ def train(accelerator, source_loader, gendata_loader, target_train_loader, targe
     pynvml.nvmlInit()
     logging.basicConfig(filename=os.path.join(args.log_dir,'training.log'), level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
     n_batch = args.n_iter_per_epoch
-    iter_source, iter_target = iter(source_loader), iter(target_train_loader)
-    if args.gendata_dir:
-        iter_gen = iter(gendata_loader)
-    else:
-        iter_gen = None
-    if hasattr(args, 'folder_gen_flux'):
-        iter_gen_flux = iter(gendata_loader_flux)
-    else:
-        iter_gen_flux = None
-
     best_acc = 0
     for e in range(1, args.n_epoch+1):
+        iter_source, iter_target = iter(source_loader), iter(target_train_loader)
+        if args.gendata_dir:
+            iter_gen = iter(gendata_loader)
+        else:
+            iter_gen = None
+        if hasattr(args, 'folder_gen_flux'):
+            iter_gen_flux = iter(gendata_loader_flux)
+        else:
+            iter_gen_flux = None
+        
         if args.pda:
             assert args.datasets=="office_home"
             label_set = obtain_label(model, target_test_loader, e, args)
@@ -247,7 +247,7 @@ def train(accelerator, source_loader, gendata_loader, target_train_loader, targe
         train_loss_transfer = AverageMeter()
         train_loss_total = AverageMeter()
 
-        for i in tqdm(iterable=range(n_batch),desc=f"Train:[{e}/{args.n_epoch}]"):
+        for _ in tqdm(iterable=range(n_batch),desc=f"Train:[{e}/{args.n_epoch}]"):
             # if i % 20 == 0:
             #     device_count = pynvml.nvmlDeviceGetCount()
             #     for num in range(device_count):
