@@ -121,20 +121,20 @@ def load_data(args):
     folder_gen = args.gendata_dir
     if folder_gen:
         gen_loader, n_class = data_loader.load_data(
-            args, folder_gen, 16, infinite_data_loader=False, train=True, weight_sampler=False, num_workers=args.num_workers, folder_src=None)
+            args, folder_gen, 32, infinite_data_loader=False, train=True, weight_sampler=False, num_workers=args.num_workers, folder_src=None)
     else:
         gen_loader, n_class = 0, 0
     
     if hasattr(args, 'folder_gen_flux'):
         gen_loader_flux, n_class = data_loader.load_data(
-                args, args.folder_gen_flux, 16, infinite_data_loader=False, train=True, num_workers=args.num_workers)
+                args, args.folder_gen_flux, 32, infinite_data_loader=False, train=True, num_workers=args.num_workers)
     else:
         gen_loader_flux, n_class = 0, 0
     
     source_loader, n_class = data_loader.load_data(
-        args, folder_src, 16, infinite_data_loader=False, train=True, num_workers=args.num_workers)
+        args, folder_src, 32, infinite_data_loader=False, train=True, num_workers=args.num_workers)
     target_train_loader, _ = data_loader.load_data(
-        args, folder_tgt, 16, infinite_data_loader=False, train=True, use_fixmatch=use_fixmatch, num_workers=args.num_workers, partial=args.pda)
+        args, folder_tgt, 32, infinite_data_loader=False, train=True, use_fixmatch=use_fixmatch, num_workers=args.num_workers, partial=args.pda)
     target_test_loader, _ = data_loader.load_data(
         args, folder_tgt, 32, infinite_data_loader=False, train=False, num_workers=args.num_workers, partial=args.pda)
     return source_loader, target_train_loader, target_test_loader, gen_loader, gen_loader_flux, n_class
