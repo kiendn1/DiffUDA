@@ -16,6 +16,8 @@ import logging
 import json
 from accelerate import Accelerator
 from accelerate.utils import set_seed
+from accelerate.utils import DataLoaderConfiguration
+from accelerate.utils import DistributedDataParallelKwargs
 import pynvml
 
 from torch.cuda.amp import GradScaler, autocast
@@ -122,13 +124,13 @@ def load_data(args):
     folder_gen = args.gendata_dir
     if folder_gen:
         gen_loader, n_class = data_loader.load_data(
-            args, folder_gen, 16, infinite_data_loader=False, train=True, weight_sampler=False, num_workers=args.num_workers, folder_src=None)
+            args, folder_gen, 32, infinite_data_loader=False, train=True, weight_sampler=False, num_workers=args.num_workers, folder_src=None)
     else:
         gen_loader, n_class = 0, 0
     
     if hasattr(args, 'folder_gen_flux'):
         gen_loader_flux, n_class = data_loader.load_data(
-                args, args.folder_gen_flux, 16, infinite_data_loader=False, train=True, num_workers=args.num_workers)
+                args, args.folder_gen_flux, 32, infinite_data_loader=False, train=True, num_workers=args.num_workers)
     else:
         gen_loader_flux, n_class = 0, 0
     
@@ -338,11 +340,10 @@ def main(args=None):
         args = parser.parse_args()
     # set_random_seed(args.seed)
     set_seed(args.seed)
-    from accelerate import Accelerator
-    from accelerate.utils import DistributedDataParallelKwargs
-
+    dataloader_config = DataLoaderConfiguration()
+    dataloader_config.split_batches=True
     kwargs = DistributedDataParallelKwargs(find_unused_parameters=True)
-    accelerator = Accelerator(kwargs_handlers=[kwargs])
+    accelerator = Accelerator(dataloader_config=dataloader_config, kwargs_handlers=[kwargs])
     if args.use_img2img:
         name_folder = args.src_domain[0]+'2'+args.tgt_domain[0]
         setattr(args, "folder_gen_flux", '/home/user/code/DiffUDA/images/flux/'+name_folder)
