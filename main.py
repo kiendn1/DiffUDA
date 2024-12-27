@@ -14,6 +14,10 @@ import os
 from models import rst
 import logging
 import json
+from accelerate import Accelerator
+from accelerate.utils import set_seed
+from accelerate.utils import DataLoaderConfiguration
+from accelerate.utils import DistributedDataParallelKwargs
 
 from torch.cuda.amp import GradScaler, autocast
 ssl._create_default_https_context = ssl._create_unverified_context
@@ -55,6 +59,7 @@ def get_parser():
     parser.add_argument('--pda', default=False, action='store_true')
     parser.add_argument('--rst', default=False, action='store_true')
     parser.add_argument('--clip', default=False, action='store_true')
+    parser.add_argument('--use_dapl', default=False, action='store_true')
 
     # FixMatch
     parser.add_argument('--fixmatch', default=False, action='store_true')
@@ -118,22 +123,22 @@ def load_data(args):
     folder_gen = args.gendata_dir
     if folder_gen:
         gen_loader, n_class = data_loader.load_data(
-            args, folder_gen, 32, infinite_data_loader=True, train=True, weight_sampler=False, num_workers=args.num_workers, folder_src=None)
+            args, folder_gen, 32, infinite_data_loader=True, train=False, weight_sampler=False, num_workers=args.num_workers, folder_src=None)
     else:
         gen_loader = None
     
     if hasattr(args, 'folder_gen_flux'):
         gen_loader_flux, n_class = data_loader.load_data(
-                args, args.folder_gen_flux, 32, infinite_data_loader=True, train=True, num_workers=args.num_workers)
+                args, args.folder_gen_flux, 32, infinite_data_loader=False, train=True, num_workers=args.num_workers)
     else:
         gen_loader_flux = None
     
     # tgt_domain = folder_tgt.split('/')[-1]
     source_loader, n_class = data_loader.load_data(
-        args, folder_src, 32, infinite_data_loader=True, train=True, num_workers=args.num_workers,)
+        args, folder_src, 32, infinite_data_loader=False, train=True, num_workers=args.num_workers,)
         # is_source=True, gendata_dir='/home/user/code/DiffUDA/images/Office-Home/stable-diffusion/'+tgt_domain)
     target_train_loader, _ = data_loader.load_data(
-        args, folder_tgt, 32, infinite_data_loader=True, train=True, use_fixmatch=use_fixmatch, num_workers=args.num_workers, partial=args.pda)
+        args, folder_tgt, 32, infinite_data_loader=False, train=True, use_fixmatch=use_fixmatch, num_workers=args.num_workers, partial=args.pda)
     target_test_loader, _ = data_loader.load_data(
         args, folder_tgt, 32, infinite_data_loader=False, train=False, num_workers=args.num_workers, partial=args.pda)
     return source_loader, target_train_loader, target_test_loader, gen_loader, gen_loader_flux, n_class
@@ -217,8 +222,8 @@ def obtain_label(model,loader,e,args):
             class_set.append(c)
     return class_set
 
-def train(source_loader, gendata_loader, target_train_loader, target_test_loader, model, optimizer, scheduler, args, gendata_loader_flux):
-    # logging.basicConfig(filename=os.path.join(args.log_dir,'training.log'), level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+def train(accelerator, source_loader, gendata_loader, target_train_loader, target_test_loader, model, optimizer, scheduler, args, gendata_loader_flux):
+    logging.basicConfig(filename=os.path.join(args.log_dir,'training.log'), level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
     n_batch = args.n_iter_per_epoch
     iter_source, iter_target = iter(source_loader), iter(target_train_loader)
     if args.gendata_dir:
@@ -231,7 +236,6 @@ def train(source_loader, gendata_loader, target_train_loader, target_test_loader
         iter_gen_flux = None
     
     preds_target = np.load("/home/user/code/SWG/Predictions/DAPL/OH/ViT/" + args.src_domain.lower()[0] + "2" + args.tgt_domain.lower()[0] + "_target_42.npy")
-    print(preds_target.shape)
     best_acc = 0
     for e in range(1, args.n_epoch+1):
         if args.pda:
@@ -248,13 +252,24 @@ def train(source_loader, gendata_loader, target_train_loader, target_test_loader
 
         for _ in tqdm(iterable=range(n_batch),desc=f"Train:[{e}/{args.n_epoch}]"):
             optimizer.zero_grad()
-            data_source, label_source, _ = next(iter_source) # .next()
+            try:
+                data_source, label_source, _ = next(iter_source) # .next()
+            except:
+                iter_source = iter(source_loader)
+                data_source, label_source, _ = next(iter_source)
             data_source, label_source = data_source, label_source
             if args.gendata_dir:
-                data_gen_st, label_gen_st, _ = next(iter_gen)
+                try:
+                    data_gen_st, label_gen_st, _ = next(iter_gen)
+                except:
+                    iter_gen = iter(gendata_loader)
+                    data_gen_st, label_gen_st, _ = next(iter_gen)
             if hasattr(args, 'folder_gen_flux'):
-                data_gen_flux, label_gen_flux, _ = next(iter_gen_flux)
-            
+                try:
+                    data_gen_flux, label_gen_flux, _ = next(iter_gen_flux)
+                except:
+                    iter_gen_flux = iter(gendata_loader_flux)
+                    data_gen_flux, label_gen_flux, _ = next(iter_gen_flux)
             if hasattr(args,'folder_gen_flux') and args.gendata_dir:
                 data_gen = torch.cat((data_gen_st, data_gen_flux), dim=0)
                 label_gen = torch.cat((label_gen_st, label_gen_flux), dim=0)
@@ -267,7 +282,11 @@ def train(source_loader, gendata_loader, target_train_loader, target_test_loader
                 data_gen, label_gen = data_gen, label_gen
             else:
                 data_gen, label_gen = None, None
-            data_target, _, tgt_index = next(iter_target) # .next()
+            try:
+                data_target, _, tgt_index = next(iter_target) # .next()
+            except:
+                iter_target = iter(target_train_loader)
+                data_target, _, tgt_index = next(iter_target) # .next()
             data_target_strong = None
             if args.fixmatch:
                 data_target, data_target_strong = data_target[0], data_target[1]
@@ -286,7 +305,7 @@ def train(source_loader, gendata_loader, target_train_loader, target_test_loader
                 # fully precision
                 clf_loss, transfer_loss = model(args, data_source, data_gen, data_target, label_source, label_gen, data_target_strong, label_set, tgt_index=tgt_index, preds_target=preds_target)
                 loss = clf_loss + transfer_loss
-                loss.backward()
+                accelerator.backward(loss)
                 optimizer.step()
 
             if args.rst:
@@ -314,11 +333,11 @@ def train(source_loader, gendata_loader, target_train_loader, target_test_loader
             dsp = rst.dsp_calculation(model)
             info += ', dsp: {:.4f}'.format(dsp)
 
-        if best_acc < test_acc:
-            best_acc = test_acc
-            save_model(model,args)
+        # if best_acc < test_acc:
+        #     best_acc = test_acc
+        #     save_model(model,args)
 
-        # logging.info(info)
+        logging.info(info)
         tqdm.write(info)
         time.sleep(1)
 
@@ -328,30 +347,36 @@ def train(source_loader, gendata_loader, target_train_loader, target_test_loader
 def main():
     parser = get_parser()
     args = parser.parse_args()
-    set_random_seed(args.seed)
+    # set_random_seed(args.seed)
+    set_seed(args.seed)
+    dataloader_config = DataLoaderConfiguration()
+    dataloader_config.split_batches=True
+    kwargs = DistributedDataParallelKwargs(find_unused_parameters=True)
+    accelerator = Accelerator(dataloader_config=dataloader_config, kwargs_handlers=[kwargs])
     if args.use_img2img:
         name_folder = args.src_domain[0]+'2'+args.tgt_domain[0]
         setattr(args, "folder_gen_flux", '/home/user/code/DiffUDA/images/flux/'+name_folder)
     source_loader, target_train_loader, target_test_loader, gendata_loader, gendata_loader_flux, num_class = load_data(args)
     setattr(args, "num_class", num_class)
     setattr(args, "max_iter", 10000)
-    # log_dir = f'log/200_32_text2img_resizemix_quality_threshold_09/{args.model_name}/{args.datasets}/{args.src_domain}2{args.tgt_domain}'
-    # log_dir = f'log/200_32_text2img_resizemix_fixmatch/{args.model_name}/{args.datasets}/{args.src_domain}2{args.tgt_domain}'
-    # if not os.path.exists(log_dir):
-    #     os.makedirs(log_dir)
-    # setattr(args, "log_dir", log_dir)
-    # filename = f'{log_dir}/config.json'
-    # with open(filename, 'w') as json_file:
-    #     json.dump(vars(args), json_file, indent=4)
-    setattr(args, "device", torch.device('cuda' if torch.cuda.is_available() else 'cpu'))
+    log_dir = f'kaggle/working/diffuda/log/200_32_text2img_dapl_training/{args.model_name}/{args.datasets}/{args.src_domain}2{args.tgt_domain}'
+    if not os.path.exists(log_dir):
+        os.makedirs(log_dir)
+    setattr(args, "log_dir", log_dir)
+    filename = f'{log_dir}/config.json'
+    with open(filename, 'w') as json_file:
+        json.dump(vars(args), json_file, indent=4)
+    # setattr(args, "device", torch.device('cuda' if torch.cuda.is_available() else 'cpu'))
     model = get_model(args)
-    # print(model)
     optimizer = get_optimizer(model, args)
 
     if args.scheduler:
         scheduler = get_lr_scheduler(optimizer,args)
     else:
         scheduler = None
+    model, optimizer, source_loader, target_train_loader, target_test_loader, gendata_loader, scheduler = accelerator.prepare(
+        model, optimizer, source_loader, target_train_loader, target_test_loader, gendata_loader, scheduler
+    )
     print(f"Base Network: {args.model_name}")
     print(f"Source Domain: {args.src_domain}")
     print(f"Target Domain: {args.tgt_domain}")
@@ -362,7 +387,7 @@ def main():
     if args.clip:
         test(model, target_test_loader, args)
     else:
-        train(source_loader, gendata_loader, target_train_loader, target_test_loader, model, optimizer, scheduler, args, gendata_loader_flux)
+        train(accelerator, source_loader, gendata_loader, target_train_loader, target_test_loader, model, optimizer, scheduler, args, gendata_loader_flux)
     
 
 if __name__ == "__main__":
