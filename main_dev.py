@@ -18,7 +18,6 @@ from accelerate import Accelerator
 from accelerate.utils import set_seed
 from accelerate.utils import DataLoaderConfiguration
 from accelerate.utils import DistributedDataParallelKwargs
-import pynvml
 
 from torch.cuda.amp import GradScaler, autocast
 ssl._create_default_https_context = ssl._create_unverified_context
@@ -222,21 +221,19 @@ def obtain_label(model,loader,e,args):
     return class_set
 
 def train(accelerator, source_loader, gendata_loader, target_train_loader, target_test_loader, model, optimizer, scheduler, args, gendata_loader_flux):
-    pynvml.nvmlInit()
     logging.basicConfig(filename=os.path.join(args.log_dir,'training.log'), level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+    iter_source, iter_target = iter(source_loader), iter(target_train_loader)
+    if args.gendata_dir:
+        iter_gen = iter(gendata_loader)
+    else:
+        iter_gen = None
+    if hasattr(args, 'folder_gen_flux'):
+        iter_gen_flux = iter(gendata_loader_flux)
+    else:
+        iter_gen_flux = None
     n_batch = args.n_iter_per_epoch
     best_acc = 0
     for e in range(1, args.n_epoch+1):
-        iter_source, iter_target = iter(source_loader), iter(target_train_loader)
-        if args.gendata_dir:
-            iter_gen = iter(gendata_loader)
-        else:
-            iter_gen = None
-        if hasattr(args, 'folder_gen_flux'):
-            iter_gen_flux = iter(gendata_loader_flux)
-        else:
-            iter_gen_flux = None
-        
         if args.pda:
             assert args.datasets=="office_home"
             label_set = obtain_label(model, target_test_loader, e, args)
@@ -250,20 +247,25 @@ def train(accelerator, source_loader, gendata_loader, target_train_loader, targe
         train_loss_total = AverageMeter()
 
         for _ in tqdm(iterable=range(n_batch),desc=f"Train:[{e}/{args.n_epoch}]"):
-            # if i % 20 == 0:
-            #     device_count = pynvml.nvmlDeviceGetCount()
-            #     for num in range(device_count):
-            #         handle = pynvml.nvmlDeviceGetHandleByIndex(num)
-            #         info = pynvml.nvmlDeviceGetMemoryInfo(handle)
-            #         print(f"GPU {num}: {info.used / 1024**2:.2f} MB used out of {info.total / 1024**2:.2f} MB")
             optimizer.zero_grad()
-            data_source, label_source = next(iter_source) # .next()
+            try:
+                data_source, label_source = next(iter_source) # .next()
+            except:
+                iter_source = iter(source_loader)
+                data_source, label_source = next(iter_source)
             data_source, label_source = data_source, label_source
             if args.gendata_dir:
-                data_gen_st, label_gen_st = next(iter_gen)
+                try:
+                    data_gen_st, label_gen_st = next(iter_gen)
+                except:
+                    iter_gen = iter(gendata_loader)
+                    data_gen_st, label_gen_st = next(iter_gen)
             if hasattr(args, 'folder_gen_flux'):
-                data_gen_flux, label_gen_flux = next(iter_gen_flux)
-            
+                try:
+                    data_gen_flux, label_gen_flux = next(iter_gen_flux)
+                except:
+                    iter_gen_flux = iter(gendata_loader_flux)
+                    data_gen_flux, label_gen_flux = next(iter_gen_flux)
             if hasattr(args,'folder_gen_flux') and args.gendata_dir:
                 data_gen = torch.cat((data_gen_st, data_gen_flux), dim=0)
                 label_gen = torch.cat((label_gen_st, label_gen_flux), dim=0)
@@ -276,7 +278,11 @@ def train(accelerator, source_loader, gendata_loader, target_train_loader, targe
                 data_gen, label_gen = data_gen, label_gen
             else:
                 data_gen, label_gen = None, None
-            data_target, _ = next(iter_target) # .next()
+            try:
+                data_target, _ = next(iter_target) # .next()
+            except:
+                iter_target = iter(target_train_loader)
+                data_target, _ = next(iter_target) # .next()
             data_target_strong = None
             if args.fixmatch:
                 data_target, data_target_strong = data_target[0], data_target[1]
