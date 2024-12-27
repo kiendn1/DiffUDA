@@ -60,7 +60,7 @@ class CLIP(nn.Module):
         text_features = self.text_features
         # cosine similarity as logits
         logit_scale = self.model.logit_scale.exp()
-        logits_per_image = logit_scale * image_features @ text_features.t()        
+        logits_per_image = logit_scale.to(image_features.device) * image_features @ (text_features.t().to(image_features.device))       
         logits_per_text = logits_per_image.t()
         if return_text_logit:
             return logits_per_image,logits_per_text
