@@ -1,7 +1,6 @@
 import os
 import os.path
 from pathlib import Path
-from types import FunctionType
 from typing import Any, Callable, cast, Dict, List, Optional, Tuple, Union
 
 from PIL import Image
@@ -11,7 +10,6 @@ from pathlib import Path
 from typing import Any, Callable, List, Optional, Tuple, Union
 
 import torch.utils.data as data
-import torch
 
 IMG_EXTENSIONS = (".jpg", ".jpeg", ".png", ".ppm", ".bmp", ".pgm", ".tif", ".tiff", ".webp")
 
@@ -129,18 +127,6 @@ def has_file_allowed_extension(filename: str, extensions: Union[str, Tuple[str, 
         bool: True if the filename ends with one of given extensions
     """
     return filename.lower().endswith(extensions if isinstance(extensions, str) else tuple(extensions))
-
-
-def is_image_file(filename: str) -> bool:
-    """Checks if a file is an allowed image extension.
-
-    Args:
-        filename (string): path to a file
-
-    Returns:
-        bool: True if the filename ends with a known image extension
-    """
-    return has_file_allowed_extension(filename, IMG_EXTENSIONS)
 
 
 def find_classes(directory: Union[str, Path]) -> Tuple[List[str], Dict[str, int]]:
@@ -375,9 +361,6 @@ class DatasetFolder(VisionDataset):
             List[Tuple[str, int]]: samples of a form (path_to_sample, class)
         """
         if class_to_idx is None:
-            # prevent potential bug since make_dataset() would use the class_to_idx logic of the
-            # find_classes() function, instead of using that of the find_classes() method, which
-            # is potentially overridden and thus could have a different logic.
             raise ValueError("The class_to_idx parameter cannot be None.")
         return make_dataset(
             directory, class_to_idx, extensions=extensions, is_valid_file=is_valid_file, allow_empty=allow_empty, is_source=is_source, gendata_dir=gendata_dir
@@ -437,21 +420,9 @@ IMG_EXTENSIONS = (".jpg", ".jpeg", ".png", ".ppm", ".bmp", ".pgm", ".tif", ".tif
 
 
 def pil_loader(path: str) -> Image.Image:
-    # open path as file to avoid ResourceWarning (https://github.com/python-pillow/Pillow/issues/835)
     with open(path, "rb") as f:
         img = Image.open(f)
         return img.convert("RGB")
-
-
-# # TODO: specify the return type
-# def accimage_loader(path: str) -> Any:
-#     import accimage
-
-#     try:
-#         return accimage.Image(path)
-#     except OSError:
-#         # Potentially a decoding problem, fall back to PIL.Image
-#         return pil_loader(path)
 
 
 def default_loader(path: str) -> Any:

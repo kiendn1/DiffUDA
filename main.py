@@ -336,17 +336,15 @@ def main():
     source_loader, target_train_loader, target_test_loader, gendata_loader, gendata_loader_flux, num_class = load_data(args)
     setattr(args, "num_class", num_class)
     setattr(args, "max_iter", 10000)
-    # log_dir = f'log/200_32_text2img_resizemix_quality_threshold_09/{args.model_name}/{args.datasets}/{args.src_domain}2{args.tgt_domain}'
-    # log_dir = f'log/200_32_text2img_resizemix_fixmatch/{args.model_name}/{args.datasets}/{args.src_domain}2{args.tgt_domain}'
-    # if not os.path.exists(log_dir):
-    #     os.makedirs(log_dir)
-    # setattr(args, "log_dir", log_dir)
-    # filename = f'{log_dir}/config.json'
-    # with open(filename, 'w') as json_file:
-    #     json.dump(vars(args), json_file, indent=4)
+    log_dir = f'log/200_32_text2img_swg/{args.model_name}/{args.datasets}/{args.src_domain}2{args.tgt_domain}'
+    if not os.path.exists(log_dir):
+        os.makedirs(log_dir)
+    setattr(args, "log_dir", log_dir)
+    filename = f'{log_dir}/config.json'
+    with open(filename, 'w') as json_file:
+        json.dump(vars(args), json_file, indent=4)
     setattr(args, "device", torch.device('cuda' if torch.cuda.is_available() else 'cpu'))
     model = get_model(args)
-    # print(model)
     optimizer = get_optimizer(model, args)
 
     if args.scheduler:
