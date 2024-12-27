@@ -121,7 +121,7 @@ def load_data(args):
     folder_gen = args.gendata_dir
     if folder_gen:
         gen_loader, n_class = data_loader.load_data(
-            args, folder_gen, 32, infinite_data_loader=False, train=True, weight_sampler=False, num_workers=args.num_workers, folder_src=None)
+            args, folder_gen, 24, infinite_data_loader=False, train=True, weight_sampler=False, num_workers=args.num_workers, folder_src=None)
     else:
         gen_loader, n_class = 0, 0
     
