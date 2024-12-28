@@ -272,7 +272,6 @@ def train(accelerator, source_loader, gendata_loader, target_train_loader, targe
             except:
                 iter_target = iter(target_train_loader)
                 data_target, _, tgt_index = next(iter_target) # .next()
-            print('t ', tgt_index.device)
             data_target_strong = None
             if args.fixmatch:
                 data_target, data_target_strong = data_target[0], data_target[1]

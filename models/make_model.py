@@ -97,6 +97,7 @@ class TransferNet(nn.Module):
 
     def forward(self, args, source_img, gen_img, target_img, source_label, gen_label, target_strong=None, label_set=None, tgt_index=None, preds_target=None, test=False):
         print('p ', preds_target.device)
+        print('t ', tgt_index.device)
         if test:
             return self.predict(target_img)
         self.base_network.apply(fix_bn)
