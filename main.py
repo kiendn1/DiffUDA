@@ -334,7 +334,7 @@ def main():
     # set_random_seed(args.seed)
     set_seed(args.seed)
     dataloader_config = DataLoaderConfiguration()
-    # dataloader_config.split_batches=True
+    dataloader_config.split_batches=True
     # kwargs = DistributedDataParallelKwargs(find_unused_parameters=True)
     # accelerator = Accelerator(dataloader_config=dataloader_config, kwargs_handlers=[kwargs])
     accelerator = Accelerator(dataloader_config=dataloader_config)
