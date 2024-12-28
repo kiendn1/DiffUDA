@@ -159,11 +159,12 @@ def get_lr_scheduler(optimizer, args):
     return scheduler
 
 
-def test(model, target_test_loader, args):
+def test(accelerator, model, target_test_loader, args):
     model.eval()
-    test_loss = AverageMeter()
+    accurate = 0
+    num_elems = 0
+    test_loss = 0
     criterion = torch.nn.CrossEntropyLoss()
-    first_test = True
     desc = "Clip Testing..." if args.clip else "Testing..."
     with torch.no_grad():
         for data, target, _ in tqdm(iterable=target_test_loader,desc=desc):
@@ -175,32 +176,14 @@ def test(model, target_test_loader, args):
             loss = criterion(s_output, target)
             test_loss.update(loss.item())
             pred = torch.max(s_output, 1)[1]
-            if first_test:
-                all_pred = pred
-                all_label = target
-                first_test = False
-            else:
-                all_pred = torch.cat((all_pred, pred), 0)
-                all_label = torch.cat((all_label, target), 0)
+            accurate_preds = accelerator.gather(pred) == accelerator.gather(target)
+            test_loss = accelerator.gather(loss).sum()
+            num_elems += accurate_preds.shape[0]
+            accurate += accurate_preds.long().sum()
 
-    if args.datasets == "visda":
-        acc = metrics.balanced_accuracy_score(all_label.cpu().numpy(),
-                                                          torch.squeeze(all_pred).float().cpu().numpy()) *100
-        cm = metrics.confusion_matrix(all_label.cpu().numpy(),
-                                              torch.squeeze(all_pred).float().cpu().numpy())
-        per_classes_acc = list(((cm.diagonal() / cm.sum(1))*100).round(4))
-        per_classes_acc = list(map(str, per_classes_acc))
-        per_classes_acc = ', '.join(per_classes_acc)
-        if args.clip:
-            print('CLIP: test_loss {:4f}, test_acc: {:.4f} \nper_class_acc: {}'.format(test_loss.avg, acc, per_classes_acc))
-        else:
-            return acc, per_classes_acc, test_loss.avg
-    else:
-        acc = torch.sum(torch.squeeze(all_pred).float() == all_label) / float(all_label.size()[0]) * 100
-        if args.clip:
-            print('CLIP: test_loss {:4f}, test_acc: {:.4f}'.format(test_loss.avg, acc))
-        else:
-            return acc, test_loss.avg
+    acc = accurate.item() / num_elems
+    test_loss = test_loss.item() / num_elems
+    return acc, test_loss 
 
 def obtain_label(model,loader,e,args):
     # For partial-set domain adaptation on the office-home benchmark
@@ -223,6 +206,7 @@ def obtain_label(model,loader,e,args):
     return class_set
 
 def train(accelerator, source_loader, gendata_loader, target_train_loader, target_test_loader, model, optimizer, scheduler, args, gendata_loader_flux):
+    test(accelerator, model, target_test_loader, args)
     logging.basicConfig(filename=os.path.join(args.log_dir,'training.log'), level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
     n_batch = args.n_iter_per_epoch
     iter_source, iter_target = iter(source_loader), iter(target_train_loader)
@@ -325,7 +309,7 @@ def train(accelerator, source_loader, gendata_loader, target_train_loader, targe
         info = 'Epoch: [{:2d}/{}], cls_loss: {:.4f}, transfer_loss: {:.4f}, total_Loss: {:.4f}'.format(
             e, args.n_epoch, train_loss_clf.avg, train_loss_transfer.avg, train_loss_total.avg)
         if args.datasets == "visda":
-            test_acc, test_per_class_acc, test_loss = test(model, target_test_loader, args)
+            test_acc, test_per_class_acc, test_loss = test(accelerator, model, target_test_loader, args)
             info += ', test_loss {:4f}, test_acc: {:.4f} \nper_class_acc: {}'.format(test_loss, test_acc, test_per_class_acc)
         else:
             test_acc, test_loss = test(model, target_test_loader, args)
