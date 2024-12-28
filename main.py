@@ -310,7 +310,7 @@ def train(accelerator, source_loader, gendata_loader, target_train_loader, targe
             test_acc, test_per_class_acc, test_loss = test(accelerator, model, target_test_loader, args)
             info += ', test_loss {:4f}, test_acc: {:.4f} \nper_class_acc: {}'.format(test_loss, test_acc, test_per_class_acc)
         else:
-            test_acc, test_loss = test(model, target_test_loader, args)
+            test_acc, test_loss = test(accelerator, model, target_test_loader, args)
             info += ', test_loss {:4f}, test_acc: {:.4f}'.format(test_loss, test_acc)
 
         if args.rst:
