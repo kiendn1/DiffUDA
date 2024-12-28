@@ -271,8 +271,6 @@ def train(accelerator, source_loader, gendata_loader, target_train_loader, targe
             except:
                 iter_target = iter(target_train_loader)
                 data_target, _, tgt_index = next(iter_target) # .next()
-            print(data_target.device)
-            print(tgt_index.device)
             tgt_index = tgt_index.cuda()
             data_target_strong = None
             if args.fixmatch:
