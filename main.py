@@ -308,12 +308,10 @@ def train(accelerator, source_loader, gendata_loader, target_train_loader, targe
             e, args.n_epoch, train_loss_clf.avg, train_loss_transfer.avg, train_loss_total.avg)
         if args.datasets == "visda":
             test_acc, test_per_class_acc, test_loss = test(accelerator, model, target_test_loader, args)
-            if accelerator.is_main_process():
-                info += ', test_loss {:4f}, test_acc: {:.4f} \nper_class_acc: {}'.format(test_loss, test_acc, test_per_class_acc)
+            info += ', test_loss {:4f}, test_acc: {:.4f} \nper_class_acc: {}'.format(test_loss, test_acc, test_per_class_acc)
         else:
             test_acc, test_loss = test(accelerator, model, target_test_loader, args)
-            if accelerator.is_main_process():
-                info += ', test_loss {:4f}, test_acc: {:.4f}'.format(test_loss, test_acc)
+            info += ', test_loss {:4f}, test_acc: {:.4f}'.format(test_loss, test_acc)
 
         if args.rst:
             dsp = rst.dsp_calculation(model)
