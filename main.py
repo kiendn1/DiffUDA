@@ -174,7 +174,6 @@ def test(accelerator, model, target_test_loader, args):
             else:
                 s_output = model(None, None, None, data, None, None, test=True)
             loss = criterion(s_output, target)
-            test_loss.update(loss.item())
             pred = torch.max(s_output, 1)[1]
             accurate_preds = accelerator.gather(pred) == accelerator.gather(target)
             test_loss = accelerator.gather(loss).sum()
