@@ -218,7 +218,9 @@ def train(accelerator, source_loader, gendata_loader, target_train_loader, targe
         iter_gen_flux = None
     
     preds_target = np.load("/kaggle/working/SWG/Predictions/DAPL/OH/ViT/" + args.src_domain.lower()[0] + "2" + args.tgt_domain.lower()[0] + "_target_42.npy")
-    preds_target = torch.from_numpy(preds_target).cuda()
+    preds_target = torch.from_numpy(preds_target)
+    print(preds_target.device)
+    preds_target = preds_target.cuda()
     # preds_target = torch.load("/kaggle/input/pre-dapl/predictions_dapl/" + args.src_domain.lower()[0] + "2" + args.tgt_domain.lower()[0] + "_1.pt")
     best_acc = 0
     for e in range(1, args.n_epoch+1):
@@ -271,7 +273,7 @@ def train(accelerator, source_loader, gendata_loader, target_train_loader, targe
             except:
                 iter_target = iter(target_train_loader)
                 data_target, _, tgt_index = next(iter_target) # .next()
-            tgt_index = tgt_index.cuda()
+            print(tgt_index.device)
             data_target_strong = None
             if args.fixmatch:
                 data_target, data_target_strong = data_target[0], data_target[1]
