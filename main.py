@@ -319,9 +319,9 @@ def train(accelerator, source_loader, gendata_loader, target_train_loader, targe
             dsp = rst.dsp_calculation(model)
             info += ', dsp: {:.4f}'.format(dsp)
 
-        # if best_acc < test_acc:
-        #     best_acc = test_acc
-        #     save_model(model,args)
+        if best_acc < test_acc:
+            best_acc = test_acc
+            # save_model(model,args)
 
         logging.info(info)
         tqdm.write(info)
