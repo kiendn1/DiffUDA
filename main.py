@@ -234,7 +234,9 @@ def train(accelerator, source_loader, gendata_loader, target_train_loader, targe
         train_loss_transfer = AverageMeter()
         train_loss_total = AverageMeter()
 
-        for _ in tqdm(iterable=range(n_batch),desc=f"Train:[{e}/{args.n_epoch}]"):
+        for i in tqdm(iterable=range(n_batch),desc=f"Train:[{e}/{args.n_epoch}]"):
+            if i%50 == 0:
+                print(list(model.parameters())[0][0,:10])
             optimizer.zero_grad()
             try:
                 data_source, label_source, _ = next(iter_source) # .next()
@@ -332,7 +334,7 @@ def train(accelerator, source_loader, gendata_loader, target_train_loader, targe
 def main():
     parser = get_parser()
     args = parser.parse_args()
-    set_random_seed(args.seed)
+    # set_random_seed(args.seed)
     set_seed(args.seed)
     dataloader_config = DataLoaderConfiguration()
     dataloader_config.split_batches=True
