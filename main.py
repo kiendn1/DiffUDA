@@ -235,8 +235,8 @@ def train(accelerator, source_loader, gendata_loader, target_train_loader, targe
         train_loss_total = AverageMeter()
 
         for i in tqdm(iterable=range(n_batch),desc=f"Train:[{e}/{args.n_epoch}]"):
-            if i%50 == 0:
-                print(list(model.parameters())[0])
+            if i%20 == 0:
+                print(list(model.get_parameters()[0]['params'])[0])
             optimizer.zero_grad()
             try:
                 data_source, label_source, _ = next(iter_source) # .next()
