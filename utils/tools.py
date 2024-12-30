@@ -84,7 +84,8 @@ def load_checkpoint(model, args):
             param.data += res_param.data
         model.classifier_layer.load_state_dict(checkpoints["head_state_dict"])
     else:
-        checkpoint_dir = os.path.join(args.log_dir, f"{args.model_name}.pt")
+        # checkpoint_dir = os.path.join(args.log_dir, f"{args.model_name}.pt")
+        checkpoint_dir = '/kaggle/working/model.pt'
         checkpoints = torch.load(checkpoint_dir, map_location="cpu")
         model.base_network.model.visual.load_state_dict(checkpoints["backbone_state_dict"])
         model.classifier_layer.load_state_dict(checkpoints["head_state_dict"])

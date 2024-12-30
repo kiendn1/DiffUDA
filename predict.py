@@ -7,7 +7,7 @@ import numpy as np
 from tqdm import tqdm
 import configargparse
 from utils import data_loader
-from utils.tools import str2bool, AverageMeter, save_model
+from utils.tools import str2bool, AverageMeter, save_model, load_checkpoint
 from models.make_model import TransferNet
 import os
 from models import rst
@@ -142,9 +142,9 @@ def predict(target_test_loader, model, args):
     list_r = []
     first_test = True
     with torch.no_grad():
-        for data, target in tqdm(iterable=target_test_loader):
+        for data, target, _ in tqdm(iterable=target_test_loader):
             data, target = data.to(args.device), target.to(args.device)
-            s_output = model.clip_predict(data)
+            s_output = model.predict(data)
             list_r.append(s_output)
             pred = torch.max(s_output, 1)[1]
             if first_test:
@@ -171,7 +171,7 @@ def main():
     setattr(args, "max_iter", 15000)
     setattr(args, "device", torch.device('cuda' if torch.cuda.is_available() else 'cpu'))
     model = get_model(args)
-    
+    load_checkpoint(model, args)
     predict(target_test_loader, model, args)
 
 if __name__ == "__main__":
