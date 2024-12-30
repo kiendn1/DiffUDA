@@ -332,7 +332,7 @@ def train(accelerator, source_loader, gendata_loader, target_train_loader, targe
 def main():
     parser = get_parser()
     args = parser.parse_args()
-    # set_random_seed(args.seed)
+    set_random_seed(args.seed)
     set_seed(args.seed)
     dataloader_config = DataLoaderConfiguration()
     dataloader_config.split_batches=True
