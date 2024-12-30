@@ -236,8 +236,8 @@ def train(accelerator, source_loader, gendata_loader, target_train_loader, targe
 
         for i in tqdm(iterable=range(n_batch),desc=f"Train:[{e}/{args.n_epoch}]"):
             if i%20 == 0:
-                # print(model.state_dict()['base_network.model.visual.transformer.resblocks.0.attn.in_proj_weight'])
-                print(model.state_dict().keys())
+                print(model.state_dict()['module.base_network.model.visual.transformer.resblocks.0.mlp.c_fc.weight'])
+                # print(model.state_dict().keys())
             optimizer.zero_grad()
             try:
                 data_source, label_source, _ = next(iter_source) # .next()
