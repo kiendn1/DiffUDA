@@ -130,7 +130,7 @@ def load_data(args):
     target_train_loader, _ = data_loader.load_data(
         args, folder_tgt, 32, infinite_data_loader=True, train=True, use_fixmatch=use_fixmatch, num_workers=args.num_workers, partial=args.pda)
     target_test_loader, _ = data_loader.load_data(
-        args, folder_tgt, 1, infinite_data_loader=False, train=False, num_workers=args.num_workers, partial=args.pda)
+        args, folder_tgt, 32, infinite_data_loader=False, train=False, num_workers=args.num_workers, partial=args.pda)
     return source_loader, target_train_loader, target_test_loader, gen_loader, gen_loader_flux, n_class
 
 def get_model(args):

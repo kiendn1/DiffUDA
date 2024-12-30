@@ -182,6 +182,7 @@ def test(accelerator, model, target_test_loader, args):
 
     acc = accurate.item() / num_elems * 100
     test_loss = test_loss.item() / num_elems
+    print('num_elems: ', num_elems)
     return acc, test_loss 
 
 def obtain_label(model,loader,e,args):
