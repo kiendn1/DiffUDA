@@ -93,8 +93,8 @@ def accelerate_save_model(accelerator, model,args):
         }, path)
     else:
 
-        path = os.path.join(args.log_dir, f"{args.model_name}.pt")
-
+        # path = os.path.join(args.log_dir, f"model.pt")
+        path = '/kaggle/working/model.pt'
         torch.save({
             'backbone_state_dict': base_network.state_dict(),
             'head_state_dict': task_head.state_dict(),
