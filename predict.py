@@ -142,7 +142,7 @@ def predict(target_test_loader, model, args):
     list_r = []
     first_test = True
     with torch.no_grad():
-        for data, target, _ in tqdm(iterable=target_test_loader):
+        for data, target in tqdm(iterable=target_test_loader):
             data, target = data.to(args.device), target.to(args.device)
             s_output = model.predict(data)
             list_r.append(s_output)
