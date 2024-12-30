@@ -321,7 +321,8 @@ def train(accelerator, source_loader, gendata_loader, target_train_loader, targe
         if best_acc < test_acc:
             best_acc = test_acc
             if accelerator.is_main_process:
-                save_model(model,args)
+                # save_model(model,args)
+                accelerate_save_model(accelerator, model, args)
         logging.info(info)
         tqdm.write(info)
         time.sleep(1)
