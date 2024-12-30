@@ -75,8 +75,8 @@ def save_model(model,args):
         }, path)
 
 def accelerate_save_model(accelerator, model,args):
-    base_network = copy.deepcopy(model.base_network.model.visual)
-    task_head = copy.deepcopy(model.classifier_layer)
+    base_network = copy.deepcopy(model.module.base_network.model.visual)
+    task_head = copy.deepcopy(model.module.classifier_layer)
     if args.rst:
         teacher_base_network = model.teacher_model.model.visual
         sparse_checkpoint = {}
