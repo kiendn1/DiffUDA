@@ -74,6 +74,32 @@ def save_model(model,args):
             'head_state_dict': task_head.state_dict(),
         }, path)
 
+def accelerate_save_model(accelerator, model,args):
+    base_network = copy.deepcopy(model.base_network.model.visual)
+    task_head = copy.deepcopy(model.classifier_layer)
+    if args.rst:
+        teacher_base_network = model.teacher_model.model.visual
+        sparse_checkpoint = {}
+        for (name, param), param_ in zip(base_network.named_parameters(), teacher_base_network.parameters()):
+            param = param - param_
+            param = param.to_sparse()
+            sparse_checkpoint[name] = param
+
+        path = os.path.join(args.log_dir,f"sparse_{args.model_name}.pt")
+
+        torch.save({
+            'backbone_state_dict': sparse_checkpoint,
+            'head_state_dict': task_head.state_dict(),
+        }, path)
+    else:
+
+        path = os.path.join(args.log_dir, f"{args.model_name}.pt")
+
+        accelerator.save_model({
+            'backbone_state_dict': base_network.state_dict(),
+            'head_state_dict': task_head.state_dict(),
+        }, path)
+
 def load_checkpoint(model, args):
     model = model.cpu()
     if args.rst:

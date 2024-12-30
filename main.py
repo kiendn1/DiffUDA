@@ -8,7 +8,7 @@ import numpy as np
 from tqdm import tqdm
 import configargparse
 from utils import data_loader
-from utils.tools import str2bool, AverageMeter, save_model
+from utils.tools import str2bool, AverageMeter, save_model, accelerate_save_model
 from models.make_model import TransferNet
 import os
 from models import rst
@@ -235,9 +235,6 @@ def train(accelerator, source_loader, gendata_loader, target_train_loader, targe
         train_loss_total = AverageMeter()
 
         for i in tqdm(iterable=range(n_batch),desc=f"Train:[{e}/{args.n_epoch}]"):
-            if i%20 == 0:
-                for j, param_group in enumerate(optimizer.param_groups):
-                    print(f"Learning rate for parameter group {j}: {param_group['lr']}")
             optimizer.zero_grad()
             try:
                 data_source, label_source, _ = next(iter_source) # .next()
@@ -323,8 +320,8 @@ def train(accelerator, source_loader, gendata_loader, target_train_loader, targe
 
         if best_acc < test_acc:
             best_acc = test_acc
-            # save_model(model,args)
-
+            if accelerator.is_main_process:
+                save_model(model,args)
         logging.info(info)
         tqdm.write(info)
         time.sleep(1)
