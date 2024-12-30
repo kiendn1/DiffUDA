@@ -236,8 +236,8 @@ def train(accelerator, source_loader, gendata_loader, target_train_loader, targe
 
         for i in tqdm(iterable=range(n_batch),desc=f"Train:[{e}/{args.n_epoch}]"):
             if i%20 == 0:
-                print(model.state_dict()['module.base_network.model.visual.transformer.resblocks.0.mlp.c_fc.weight'])
-                # print(model.state_dict().keys())
+                for j, param_group in enumerate(optimizer.param_groups):
+                    print(f"Learning rate for parameter group {j}: {param_group['lr']}")
             optimizer.zero_grad()
             try:
                 data_source, label_source, _ = next(iter_source) # .next()
