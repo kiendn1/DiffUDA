@@ -220,8 +220,8 @@ def train(accelerator, source_loader, gendata_loader, target_train_loader, targe
     else:
         iter_gen_flux = None
     
-    # preds_target = np.load("/kaggle/working/SWG/Predictions/DAPL/OH/ViT/" + args.src_domain.lower()[0] + "2" + args.tgt_domain.lower()[0] + "_target_42.npy")
-    # preds_target = torch.from_numpy(preds_target)
+    preds_target = np.load("/kaggle/working/SWG/Predictions/DAPL/OH/ViT/" + args.src_domain.lower()[0] + "2" + args.tgt_domain.lower()[0] + "_target_42.npy")
+    preds_target = torch.from_numpy(preds_target)
     # preds_target = torch.load("/kaggle/input/pre-dapl/predictions_dapl/" + args.src_domain.lower()[0] + "2" + args.tgt_domain.lower()[0] + "_1.pt")
     best_acc = 0
     for e in range(1, args.n_epoch+1):
@@ -290,8 +290,8 @@ def train(accelerator, source_loader, gendata_loader, target_train_loader, targe
                 scaler.update()
             else:
                 # fully precision
-                # clf_loss, transfer_loss = model(args, data_source, data_gen, data_target, label_source, label_gen, data_target_strong, label_set, tgt_index=tgt_index, preds_target=preds_target)
-                clf_loss, transfer_loss = model(args, data_source, data_gen, data_target, label_source, label_gen, data_target_strong, label_set)
+                clf_loss, transfer_loss = model(args, data_source, data_gen, data_target, label_source, label_gen, data_target_strong, label_set, tgt_index=tgt_index, preds_target=preds_target)
+                # clf_loss, transfer_loss = model(args, data_source, data_gen, data_target, label_source, label_gen, data_target_strong, label_set)
                 loss = clf_loss + transfer_loss
                 accelerator.backward(loss)
                 optimizer.step()
