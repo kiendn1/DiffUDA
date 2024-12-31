@@ -155,7 +155,10 @@ def get_optimizer(model, args):
     return optimizer
 
 def get_lr_scheduler(optimizer, args):
-    scheduler = torch.optim.lr_scheduler.LambdaLR(optimizer, lambda x:  (args.lr * (1. + args.lr_gamma * float(x)) ** (-args.lr_decay)))
+    def lambda_lr_with_logging(epoch):
+        print(f"Lambda function called for epoch {epoch}")
+        return args.lr * (1. + args.lr_gamma * float(epoch)) ** (-args.lr_decay)
+    scheduler = torch.optim.lr_scheduler.LambdaLR(optimizer, lr_lambda=lambda_lr_with_logging)
     return scheduler
 
 
