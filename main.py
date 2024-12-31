@@ -302,7 +302,10 @@ def train(accelerator, source_loader, gendata_loader, target_train_loader, targe
                 param_dict = {name: param for name, param in model.named_parameters()}
                 if i%4 == 0:
                     print(tgt_index)
-                    print(param_dict['module.classifier_layer.2.weight'].grad)
+                    if torch.cuda.device_count() == 1:
+                        print(param_dict['classifier_layer.2.weight'].grad)
+                    else:
+                        print(param_dict['module.classifier_layer.2.weight'].grad)
                 optimizer.step()
 
             if args.rst:
