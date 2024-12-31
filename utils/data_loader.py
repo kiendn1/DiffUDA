@@ -7,6 +7,7 @@ from torchvision.transforms import InterpolationMode
 BICUBIC = InterpolationMode.BICUBIC
 from torchvision.transforms import Compose, Resize, CenterCrop, ToTensor, Normalize
 from utils.folder import ImageFolder
+from torch.utils.data import Dataset, DataLoader
 
 class toRGB(nn.Module):
     def forward(self, x):
@@ -174,7 +175,7 @@ def get_classes_weight(dataset, source_dataset):
 
 def get_data_loader(dataset, batch_size, shuffle=True, drop_last=False, num_workers=0, infinite_data_loader=False,weights=None, **kwargs):
     if not infinite_data_loader:
-        return torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=True, drop_last=drop_last, num_workers=num_workers, **kwargs)
+        return DataLoader(dataset, batch_size=batch_size, shuffle=True, drop_last=drop_last, num_workers=num_workers, **kwargs)
     else:
         return InfiniteDataLoader(dataset, batch_size=batch_size, shuffle=True, drop_last=drop_last, num_workers=num_workers, weights=weights, **kwargs)
 
