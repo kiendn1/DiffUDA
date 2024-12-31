@@ -169,6 +169,7 @@ def test(accelerator, model, target_test_loader, args):
     with torch.no_grad():
         for data, target, _ in tqdm(iterable=target_test_loader,desc=desc):
             data, target = data, target
+            print(data.shape[0])
             if args.clip:
                 s_output = model.clip_predict(data)
             else:
@@ -177,7 +178,6 @@ def test(accelerator, model, target_test_loader, args):
             pred = torch.max(s_output, 1)[1]
             accurate_preds = accelerator.gather(pred) == accelerator.gather(target)
             test_loss += accelerator.gather(loss).sum()
-            print(accurate_preds.shape[0])
             num_elems += accurate_preds.shape[0]
             accurate += accurate_preds.long().sum()
 
