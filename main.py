@@ -212,7 +212,7 @@ def obtain_label(model,loader,e,args):
     return class_set
 
 def train(accelerator, source_loader, gendata_loader, target_train_loader, target_test_loader, model, optimizer, scheduler, args, gendata_loader_flux):
-    test(accelerator, model, target_test_loader, args)
+    # test(accelerator, model, target_test_loader, args)
     logging.basicConfig(filename=os.path.join(args.log_dir,'training.log'), level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
     n_batch = args.n_iter_per_epoch
     iter_source, iter_target = iter(source_loader), iter(target_train_loader)
@@ -279,6 +279,7 @@ def train(accelerator, source_loader, gendata_loader, target_train_loader, targe
             except:
                 iter_target = iter(target_train_loader)
                 data_target, _, tgt_index = next(iter_target) # .next()
+            print(tgt_index)
             data_target_strong = None
             if args.fixmatch:
                 data_target, data_target_strong = data_target[0], data_target[1]
