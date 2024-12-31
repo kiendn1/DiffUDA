@@ -166,10 +166,13 @@ def test(accelerator, model, target_test_loader, args):
     test_loss = 0
     criterion = torch.nn.CrossEntropyLoss(reduction='none')
     desc = "Clip Testing..." if args.clip else "Testing..."
+    i = 1
     with torch.no_grad():
         for data, target, _ in tqdm(iterable=target_test_loader,desc=desc):
             data, target = data, target
-            print(data.shape[0])
+            if i == 137:
+                print(data[-1])
+            i += 1
             if args.clip:
                 s_output = model.clip_predict(data)
             else:
