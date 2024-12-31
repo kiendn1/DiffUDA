@@ -301,6 +301,8 @@ def train(accelerator, source_loader, gendata_loader, target_train_loader, targe
 
             # learning rate scheduler update
             scheduler.step()
+            if i % 4 == 0:
+                print(optimizer.param_groups[1]['lr'])
 
             # training loss update
             train_loss_clf.update(clf_loss.item())
