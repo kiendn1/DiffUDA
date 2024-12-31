@@ -297,7 +297,8 @@ def train(accelerator, source_loader, gendata_loader, target_train_loader, targe
                 # clf_loss, transfer_loss = model(args, data_source, data_gen, data_target, label_source, label_gen, data_target_strong, label_set)
                 loss = clf_loss + transfer_loss
                 accelerator.backward(loss)
-                print(model.named_parameters().keys())
+                param_dict = {name: param for name, param in model.named_parameters()}
+                print(param_dict.keys())
                 model.named_parameters()['module.backbone.visual.transformer.']
                 optimizer.step()
 
