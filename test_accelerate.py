@@ -27,5 +27,7 @@ dataloader_config.split_batches=True
 kwargs = DistributedDataParallelKwargs(find_unused_parameters=True)
 accelerator = Accelerator(kwargs_handlers=[kwargs], step_scheduler_with_optimizer=False, dataloader_config=dataloader_config)
 
+dataloader = accelerator.prepare(dataloader)
+
 for batch in dataloader:
     print(batch)
