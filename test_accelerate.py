@@ -18,7 +18,7 @@ class SequenceDataset(Dataset):
 
 # Initialize the dataset and DataLoader
 dataset = SequenceDataset(1, 50)
-dataloader = DataLoader(dataset, batch_size=4, shuffle=False)
+dataloader = DataLoader(dataset, batch_size=4, shuffle=True)
 
 # Iterate through the DataLoader
 set_seed(42)
