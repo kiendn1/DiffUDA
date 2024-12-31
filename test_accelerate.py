@@ -20,7 +20,7 @@ class SequenceDataset(Dataset):
 
 # Initialize the dataset and DataLoader
 dataset = SequenceDataset(1, 50)
-dataloader = DataLoader(dataset, batch_size=8, shuffle=True, num_workers=2)
+dataloader = DataLoader(dataset, batch_size=8, shuffle=True, num_workers=0)
 
 # Iterate through the DataLoader
 set_seed(42)
@@ -34,7 +34,7 @@ kwargs = DistributedDataParallelKwargs(find_unused_parameters=True)
 accelerator = Accelerator(kwargs_handlers=[kwargs], step_scheduler_with_optimizer=False, dataloader_config=dataloader_config)
 
 dataloader = accelerator.prepare(dataloader)
-print(type(dataloader.get_sampler()))
+print(dataloader.get_sampler())
 
 for batch in dataloader:
     print(batch)
