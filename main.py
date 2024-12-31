@@ -299,6 +299,7 @@ def train(accelerator, source_loader, gendata_loader, target_train_loader, targe
                 accelerator.backward(loss)
                 param_dict = {name: param for name, param in model.named_parameters()}
                 if i%4 == 0:
+                    print(tgt_index)
                     print(param_dict['module.classifier_layer.2.weight'].grad)
                 optimizer.step()
 
