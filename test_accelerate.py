@@ -31,6 +31,7 @@ set_seed(42)
 dataloader_config = DataLoaderConfiguration()
 dataloader_config.split_batches=True
 dataloader_config.use_seedable_sampler  = True
+dataloader_config.dispatch_batches = True
 kwargs = DistributedDataParallelKwargs(find_unused_parameters=True)
 accelerator = Accelerator(kwargs_handlers=[kwargs], step_scheduler_with_optimizer=False, dataloader_config=dataloader_config)
 
