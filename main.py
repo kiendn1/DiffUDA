@@ -177,6 +177,7 @@ def test(accelerator, model, target_test_loader, args):
             pred = torch.max(s_output, 1)[1]
             accurate_preds = accelerator.gather(pred) == accelerator.gather(target)
             test_loss += accelerator.gather(loss).sum()
+            print(accurate_preds.shape[0])
             num_elems += accurate_preds.shape[0]
             accurate += accurate_preds.long().sum()
 
