@@ -4,6 +4,8 @@ from accelerate import Accelerator
 from accelerate.utils import set_seed
 from accelerate.utils import DataLoaderConfiguration
 from accelerate.utils import DistributedDataParallelKwargs
+from torch.utils.data import BatchSampler, DataLoader, IterableDataset, RandomSampler
+
 
 # Custom Dataset
 class SequenceDataset(Dataset):
@@ -18,10 +20,14 @@ class SequenceDataset(Dataset):
 
 # Initialize the dataset and DataLoader
 dataset = SequenceDataset(1, 50)
-dataloader = DataLoader(dataset, batch_size=8, shuffle=True, num_workers=4)
+dataloader = DataLoader(dataset, batch_size=8, shuffle=True)
 
 # Iterate through the DataLoader
 set_seed(42)
+# print(isinstance(dataloader.sampler, RandomSampler))
+# print(type(dataloader.batch_sampler))
+# u = getattr(dataloader.batch_sampler, "sampler", None)
+# print(u)
 dataloader_config = DataLoaderConfiguration()
 dataloader_config.split_batches=True
 kwargs = DistributedDataParallelKwargs(find_unused_parameters=True)
