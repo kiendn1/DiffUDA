@@ -347,7 +347,7 @@ def main():
     # dataloader_config.split_batches=True
     # accelerator = Accelerator(dataloader_config=dataloader_config)
     kwargs = DistributedDataParallelKwargs(find_unused_parameters=True)
-    accelerator = Accelerator(kwargs_handlers=[kwargs])
+    accelerator = Accelerator(kwargs_handlers=[kwargs], step_scheduler_with_optimizer=False)
     if args.use_img2img:
         name_folder = args.src_domain[0]+'2'+args.tgt_domain[0]
         setattr(args, "folder_gen_flux", '/home/user/code/DiffUDA/images/flux/'+name_folder)
