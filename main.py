@@ -247,7 +247,7 @@ def train(source_loader, gendata_loader, target_train_loader, target_test_loader
         train_loss_transfer = AverageMeter()
         train_loss_total = AverageMeter()
 
-        for _ in tqdm(iterable=range(n_batch),desc=f"Train:[{e}/{args.n_epoch}]"):
+        for i in tqdm(iterable=range(n_batch),desc=f"Train:[{e}/{args.n_epoch}]"):
             optimizer.zero_grad()
             data_source, label_source, _ = next(iter_source) # .next()
             data_source, label_source = data_source.to(args.device), label_source.to(args.device)
@@ -295,6 +295,8 @@ def train(source_loader, gendata_loader, target_train_loader, target_test_loader
 
             # learning rate scheduler update
             scheduler.step()
+            if i % 4 == 0:
+                print(optimizer.param_groups[1]['lr'])
 
             # training loss update
             train_loss_clf.update(clf_loss.item())
