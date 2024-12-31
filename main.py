@@ -171,6 +171,7 @@ def test(accelerator, model, target_test_loader, args):
         for data, target, _ in tqdm(iterable=target_test_loader,desc=desc):
             data, target = data, target
             if i == 137:
+                print('ahh ', data[0])
                 print(data[-1])
             i += 1
             if args.clip:
