@@ -298,8 +298,8 @@ def train(accelerator, source_loader, gendata_loader, target_train_loader, targe
                 loss = clf_loss + transfer_loss
                 accelerator.backward(loss)
                 param_dict = {name: param for name, param in model.named_parameters()}
-                print(param_dict.keys())
-                model.named_parameters()['module.backbone.visual.transformer.']
+                if i%4 == 0:
+                    print(param_dict['module.base_network.model.transformer.resblocks.11.ln_1.weight'])
                 optimizer.step()
 
             if args.rst:
