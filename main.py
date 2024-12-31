@@ -168,11 +168,12 @@ def test(accelerator, model, target_test_loader, args):
     desc = "Clip Testing..." if args.clip else "Testing..."
     i = 1
     with torch.no_grad():
-        for data, target, _ in tqdm(iterable=target_test_loader,desc=desc):
+        for data, target, index in tqdm(iterable=target_test_loader,desc=desc):
             data, target = data, target
-            if i == 137:
-                print('ahh ', data[0])
-                print(data[-1])
+            print(index)
+            # if i == 137:
+            #     print('ahh ', data[0])
+            #     print(data[-1])
             i += 1
             if args.clip:
                 s_output = model.clip_predict(data)
