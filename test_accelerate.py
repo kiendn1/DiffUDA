@@ -30,7 +30,6 @@ set_seed(42)
 # print(u)
 dataloader_config = DataLoaderConfiguration()
 dataloader_config.split_batches=True
-dataloader_config.use_stateful_dataloader = True
 dataloader_config.use_seedable_sampler  = True
 kwargs = DistributedDataParallelKwargs(find_unused_parameters=True)
 accelerator = Accelerator(kwargs_handlers=[kwargs], step_scheduler_with_optimizer=False, dataloader_config=dataloader_config)
