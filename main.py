@@ -380,6 +380,9 @@ def main():
     model, optimizer, source_loader, target_train_loader, target_test_loader, gendata_loader, scheduler = accelerator.prepare(
         model, optimizer, source_loader, target_train_loader, target_test_loader, gendata_loader, scheduler
     )
+    gendata_loader.get_sampler().initial_seed = 6909045637428952499
+    source_loader.get_sampler().initial_seed = 1819927849474927636
+    target_train_loader.get_sampler().initial_seed = 1071453510346823114
     print(f"Base Network: {args.model_name}")
     print(f"Source Domain: {args.src_domain}")
     print(f"Target Domain: {args.tgt_domain}")
