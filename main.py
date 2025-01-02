@@ -131,7 +131,7 @@ def load_data(args):
     
     # tgt_domain = folder_tgt.split('/')[-1]
     source_loader, n_class = data_loader.load_data(
-        args, folder_src, 32, infinite_data_loader=True, train=True, num_workers=args.num_workers,)
+        args, folder_src, 32, infinite_data_loader=True, train=True, num_workers=args.num_workers)
         # is_source=True, gendata_dir='/home/user/code/DiffUDA/images/Office-Home/stable-diffusion/'+tgt_domain)
     target_train_loader, _ = data_loader.load_data(
         args, folder_tgt, 32, infinite_data_loader=True, train=True, use_fixmatch=use_fixmatch, num_workers=args.num_workers, partial=args.pda)
@@ -250,12 +250,14 @@ def train(source_loader, gendata_loader, target_train_loader, target_test_loader
         train_loss_transfer = AverageMeter()
         train_loss_total = AverageMeter()
 
-        for _ in tqdm(iterable=range(n_batch),desc=f"Train:[{e}/{args.n_epoch}]"):
+        for i in tqdm(iterable=range(n_batch),desc=f"Train:[{e}/{args.n_epoch}]"):
             optimizer.zero_grad()
-            data_source, label_source, _ = next(iter_source) # .next()
+            data_source, label_source, src_index = next(iter_source) # .next()
+            print('src_index ', src_index)
             data_source, label_source = data_source.to(args.device), label_source.to(args.device)
             if args.gendata_dir:
-                data_gen_st, label_gen_st, _ = next(iter_gen)
+                data_gen_st, label_gen_st, gen_index = next(iter_gen)
+                print('gen_index ', gen_index)
             if hasattr(args, 'folder_gen_flux'):
                 data_gen_flux, label_gen_flux, _ = next(iter_gen_flux)
             
@@ -272,6 +274,7 @@ def train(source_loader, gendata_loader, target_train_loader, target_test_loader
             else:
                 data_gen, label_gen = None, None
             data_target, _, tgt_index = next(iter_target) # .next()
+            print('tgt_index ', tgt_index)
             data_target_strong = None
             if args.fixmatch:
                 data_target, data_target_strong = data_target[0], data_target[1]
@@ -290,7 +293,12 @@ def train(source_loader, gendata_loader, target_train_loader, target_test_loader
                 # fully precision
                 clf_loss, transfer_loss = model(args, data_source, data_gen, data_target, label_source, label_gen, data_target_strong, label_set, tgt_index=tgt_index, preds_target=preds_target)
                 loss = clf_loss + transfer_loss
+                print(loss)
                 loss.backward()
+                param_dict = {name: param for name, param in model.named_parameters()}
+                if i%1 == 0:
+                    print(tgt_index)
+                    print(param_dict['classifier_layer.2.weight'].grad)
                 optimizer.step()
 
             if args.rst:
