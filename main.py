@@ -301,13 +301,13 @@ def train(accelerator, source_loader, gendata_loader, target_train_loader, targe
                 # clf_loss, transfer_loss = model(args, data_source, data_gen, data_target, label_source, label_gen, data_target_strong, label_set)
                 loss = clf_loss + transfer_loss
                 accelerator.backward(loss)
-                # param_dict = {name: param for name, param in model.named_parameters()}
-                # if i%4 == 0:
-                #     print(tgt_index)
-                #     if torch.cuda.device_count() == 1:
-                #         print(param_dict['classifier_layer.2.weight'].grad)
-                #     else:
-                #         print(param_dict['module.classifier_layer.2.weight'].grad)
+                param_dict = {name: param for name, param in model.named_parameters()}
+                if i%1 == 0:
+                    print(tgt_index)
+                    if torch.cuda.device_count() == 1:
+                        print(param_dict['classifier_layer.2.weight'].grad)
+                    else:
+                        print(param_dict['module.classifier_layer.2.weight'].grad)
                 optimizer.step()
 
             if args.rst:
