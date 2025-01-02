@@ -279,6 +279,7 @@ def train(source_loader, gendata_loader, target_train_loader, target_test_loader
                 data_gen, label_gen = None, None
             data_target, _, tgt_index = next(iter_target) # .next()
             data_target = data_target[:16]
+            tgt_index = tgt_index[:16]
             print('tgt_index ', tgt_index)
             data_target_strong = None
             if args.fixmatch:
