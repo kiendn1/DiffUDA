@@ -303,7 +303,8 @@ def train(accelerator, source_loader, gendata_loader, target_train_loader, targe
                 # clf_loss, transfer_loss = model(args, data_source, data_gen, data_target, label_source, label_gen, data_target_strong, label_set)
                 loss = clf_loss + transfer_loss
                 print(loss)
-                accelerator.backward(loss)
+                loss.backward()
+                # accelerator.backward(loss)
                 param_dict = {name: param for name, param in model.named_parameters()}
                 if i%1 == 0:
                     if torch.cuda.device_count() == 1:
