@@ -255,12 +255,12 @@ def train(source_loader, gendata_loader, target_train_loader, target_test_loader
             data_source, label_source, src_index = next(iter_source) # .next()
             print('src_index ', src_index)
             data_source, label_source = data_source.to(args.device), label_source.to(args.device)
-            data_source = data_source[8:]
-            label_source = label_source[8:]
+            data_source = data_source[16:]
+            label_source = label_source[16:]
             if args.gendata_dir:
                 data_gen_st, label_gen_st, gen_index = next(iter_gen)
-                data_gen_st = data_gen_st[16:]
-                label_gen_st = label_gen_st[16:]
+                data_gen_st = data_gen_st[8:]
+                label_gen_st = label_gen_st[8:]
                 print('gen_index ', gen_index)
             if hasattr(args, 'folder_gen_flux'):
                 data_gen_flux, label_gen_flux, _ = next(iter_gen_flux)
