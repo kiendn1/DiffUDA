@@ -245,14 +245,16 @@ def train(accelerator, source_loader, gendata_loader, target_train_loader, targe
         for i in tqdm(iterable=range(n_batch),desc=f"Train:[{e}/{args.n_epoch}]"):
             optimizer.zero_grad()
             try:
-                data_source, label_source, _ = next(iter_source) # .next()
+                data_source, label_source, src_index = next(iter_source) # .next()
+                print(src_index)
             except:
                 iter_source = iter(source_loader)
                 data_source, label_source, _ = next(iter_source)
             data_source, label_source = data_source, label_source
             if args.gendata_dir:
                 try:
-                    data_gen_st, label_gen_st, _ = next(iter_gen)
+                    data_gen_st, label_gen_st, gen_index = next(iter_gen)
+                    print('gen_index ', gen_index)
                 except:
                     iter_gen = iter(gendata_loader)
                     data_gen_st, label_gen_st, _ = next(iter_gen)
@@ -276,7 +278,7 @@ def train(accelerator, source_loader, gendata_loader, target_train_loader, targe
                 data_gen, label_gen = None, None
             try:
                 data_target, _, tgt_index = next(iter_target) # .next()
-                print(tgt_index)
+                print('tgt_index ', tgt_index)
             except e:
                 print(e)
                 iter_target = iter(target_train_loader)
@@ -301,13 +303,13 @@ def train(accelerator, source_loader, gendata_loader, target_train_loader, targe
                 # clf_loss, transfer_loss = model(args, data_source, data_gen, data_target, label_source, label_gen, data_target_strong, label_set)
                 loss = clf_loss + transfer_loss
                 accelerator.backward(loss)
-                param_dict = {name: param for name, param in model.named_parameters()}
-                if i%1 == 0:
-                    print(tgt_index)
-                    if torch.cuda.device_count() == 1:
-                        print(param_dict['classifier_layer.2.weight'].grad)
-                    else:
-                        print(param_dict['module.classifier_layer.2.weight'].grad)
+                # param_dict = {name: param for name, param in model.named_parameters()}
+                # if i%1 == 0:
+                #     print(tgt_index)
+                #     if torch.cuda.device_count() == 1:
+                #         print(param_dict['classifier_layer.2.weight'].grad)
+                #     else:
+                #         print(param_dict['module.classifier_layer.2.weight'].grad)
                 optimizer.step()
 
             if args.rst:
