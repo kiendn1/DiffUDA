@@ -293,6 +293,7 @@ def train(source_loader, gendata_loader, target_train_loader, target_test_loader
                 # fully precision
                 clf_loss, transfer_loss = model(args, data_source, data_gen, data_target, label_source, label_gen, data_target_strong, label_set, tgt_index=tgt_index, preds_target=preds_target)
                 loss = clf_loss + transfer_loss
+                print(loss)
                 loss.backward()
                 param_dict = {name: param for name, param in model.named_parameters()}
                 if i%1 == 0:
