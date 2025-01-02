@@ -382,6 +382,10 @@ def main():
     )
     print(type(gendata_loader))
     print(type(gendata_loader.get_sampler()))
+    print(type(source_loader))
+    print(type(source_loader.get_sampler()))
+    print(type(target_train_loader))
+    print(type(target_train_loader.get_sampler()))
     gendata_loader.get_sampler().initial_seed = 6909045637428952499
     source_loader.get_sampler().initial_seed = 1819927849474927636
     target_train_loader.get_sampler().initial_seed = 1071453510346823114
