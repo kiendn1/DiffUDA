@@ -118,8 +118,12 @@ def load_data(args):
     folder_tgt = os.path.join(args.data_dir, args.tgt_domain)
     folder_gen = args.gendata_dir
     if folder_gen:
+        seed = int(torch.empty((), dtype=torch.int64).random_().item())
+        print(seed)
+        generator = torch.Generator()
+        generator.manual_seed(seed)
         gen_loader, n_class = data_loader.load_data(
-            args, folder_gen, 16, infinite_data_loader=True, train=True, weight_sampler=False, num_workers=args.num_workers, folder_src=None)
+            args, folder_gen, 16, infinite_data_loader=True, train=True, weight_sampler=False, num_workers=args.num_workers, folder_src=None, generator=generator)
     else:
         gen_loader = None
     
@@ -130,11 +134,19 @@ def load_data(args):
         gen_loader_flux = None
     
     # tgt_domain = folder_tgt.split('/')[-1]
+    seed = int(torch.empty((), dtype=torch.int64).random_().item())
+    print(seed)
+    generator = torch.Generator()
+    generator.manual_seed(seed)
     source_loader, n_class = data_loader.load_data(
-        args, folder_src, 32, infinite_data_loader=True, train=True, num_workers=args.num_workers,)
+        args, folder_src, 32, infinite_data_loader=True, train=True, num_workers=args.num_workers, generator=generator)
         # is_source=True, gendata_dir='/home/user/code/DiffUDA/images/Office-Home/stable-diffusion/'+tgt_domain)
+    seed = int(torch.empty((), dtype=torch.int64).random_().item())
+    print(seed)
+    generator = torch.Generator()
+    generator.manual_seed(seed)
     target_train_loader, _ = data_loader.load_data(
-        args, folder_tgt, 32, infinite_data_loader=True, train=True, use_fixmatch=use_fixmatch, num_workers=args.num_workers, partial=args.pda)
+        args, folder_tgt, 32, infinite_data_loader=True, train=True, use_fixmatch=use_fixmatch, num_workers=args.num_workers, partial=args.pda, generator=generator)
     target_test_loader, _ = data_loader.load_data(
         args, folder_tgt, 32, infinite_data_loader=False, train=False, num_workers=args.num_workers, partial=args.pda)
     return source_loader, target_train_loader, target_test_loader, gen_loader, gen_loader_flux, n_class
@@ -292,7 +304,7 @@ def train(source_loader, gendata_loader, target_train_loader, target_test_loader
                 loss = clf_loss + transfer_loss
                 loss.backward()
                 param_dict = {name: param for name, param in model.named_parameters()}
-                if i%4 == 0:
+                if i%1 == 0:
                     print(tgt_index)
                     print(param_dict['classifier_layer.2.weight'].grad)
                 optimizer.step()
@@ -302,8 +314,6 @@ def train(source_loader, gendata_loader, target_train_loader, target_test_loader
 
             # learning rate scheduler update
             scheduler.step()
-            if i % 4 == 0:
-                print(optimizer.param_groups[1]['lr'])
 
             # training loss update
             train_loss_clf.update(clf_loss.item())
