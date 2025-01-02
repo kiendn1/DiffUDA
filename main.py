@@ -298,7 +298,7 @@ def train(source_loader, gendata_loader, target_train_loader, target_test_loader
                 # if i%1 == 0:
                 #     print(tgt_index)
                 #     print(param_dict['classifier_layer.2.weight'].grad)
-                # optimizer.step()
+                optimizer.step()
 
             if args.rst:
                 rst.training(model,args)
