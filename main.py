@@ -118,12 +118,8 @@ def load_data(args):
     folder_tgt = os.path.join(args.data_dir, args.tgt_domain)
     folder_gen = args.gendata_dir
     if folder_gen:
-        seed = int(torch.empty((), dtype=torch.int64).random_().item())
-        generator = torch.Generator()
-        generator.manual_seed(seed)
-        print('g: ', seed)
         gen_loader, n_class = data_loader.load_data(
-            args, folder_gen, 16, infinite_data_loader=True, train=True, weight_sampler=False, num_workers=args.num_workers, folder_src=None, generator=generator)
+            args, folder_gen, 16, infinite_data_loader=True, train=True, weight_sampler=False, num_workers=args.num_workers, folder_src=None)
     else:
         gen_loader = None
     
@@ -134,20 +130,11 @@ def load_data(args):
         gen_loader_flux = None
     
     # tgt_domain = folder_tgt.split('/')[-1]
-    seed = int(torch.empty((), dtype=torch.int64).random_().item())
-    print(seed)
-    generator = torch.Generator()
-    generator.manual_seed(seed)
-    print('s: ', seed)
     source_loader, n_class = data_loader.load_data(
-        args, folder_src, 32, infinite_data_loader=True, train=True, num_workers=args.num_workers, generator=generator)
+        args, folder_src, 32, infinite_data_loader=True, train=True, num_workers=args.num_workers)
         # is_source=True, gendata_dir='/home/user/code/DiffUDA/images/Office-Home/stable-diffusion/'+tgt_domain)
-    seed = int(torch.empty((), dtype=torch.int64).random_().item())
-    print('t: ', seed)
-    generator = torch.Generator()
-    generator.manual_seed(seed)
     target_train_loader, _ = data_loader.load_data(
-        args, folder_tgt, 32, infinite_data_loader=True, train=True, use_fixmatch=use_fixmatch, num_workers=args.num_workers, partial=args.pda, generator=generator)
+        args, folder_tgt, 32, infinite_data_loader=True, train=True, use_fixmatch=use_fixmatch, num_workers=args.num_workers, partial=args.pda)
     target_test_loader, _ = data_loader.load_data(
         args, folder_tgt, 32, infinite_data_loader=False, train=False, num_workers=args.num_workers, partial=args.pda)
     return source_loader, target_train_loader, target_test_loader, gen_loader, gen_loader_flux, n_class
