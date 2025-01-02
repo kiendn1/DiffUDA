@@ -119,9 +119,9 @@ def load_data(args):
     folder_gen = args.gendata_dir
     if folder_gen:
         seed = int(torch.empty((), dtype=torch.int64).random_().item())
-        print(seed)
         generator = torch.Generator()
         generator.manual_seed(seed)
+        print('g: ', seed)
         gen_loader, n_class = data_loader.load_data(
             args, folder_gen, 16, infinite_data_loader=True, train=True, weight_sampler=False, num_workers=args.num_workers, folder_src=None, generator=generator)
     else:
@@ -138,11 +138,12 @@ def load_data(args):
     print(seed)
     generator = torch.Generator()
     generator.manual_seed(seed)
+    print('s: ', seed)
     source_loader, n_class = data_loader.load_data(
         args, folder_src, 32, infinite_data_loader=True, train=True, num_workers=args.num_workers, generator=generator)
         # is_source=True, gendata_dir='/home/user/code/DiffUDA/images/Office-Home/stable-diffusion/'+tgt_domain)
     seed = int(torch.empty((), dtype=torch.int64).random_().item())
-    print(seed)
+    print('t: ', seed)
     generator = torch.Generator()
     generator.manual_seed(seed)
     target_train_loader, _ = data_loader.load_data(
