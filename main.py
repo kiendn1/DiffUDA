@@ -246,7 +246,7 @@ def train(accelerator, source_loader, gendata_loader, target_train_loader, targe
             optimizer.zero_grad()
             try:
                 data_source, label_source, src_index = next(iter_source) # .next()
-                print(src_index)
+                # print(src_index)
             except:
                 iter_source = iter(source_loader)
                 data_source, label_source, _ = next(iter_source)
@@ -254,7 +254,7 @@ def train(accelerator, source_loader, gendata_loader, target_train_loader, targe
             if args.gendata_dir:
                 try:
                     data_gen_st, label_gen_st, gen_index = next(iter_gen)
-                    print('gen_index ', gen_index)
+                    # print('gen_index ', gen_index)
                 except:
                     iter_gen = iter(gendata_loader)
                     data_gen_st, label_gen_st, _ = next(iter_gen)
@@ -278,9 +278,9 @@ def train(accelerator, source_loader, gendata_loader, target_train_loader, targe
                 data_gen, label_gen = None, None
             try:
                 data_target, _, tgt_index = next(iter_target) # .next()
-                print('tgt_index ', tgt_index)
+                # print('tgt_index ', tgt_index)
             except e:
-                print(e)
+                # print(e)
                 iter_target = iter(target_train_loader)
                 data_target, _, tgt_index = next(iter_target) # .next()
             data_target_strong = None
@@ -303,16 +303,16 @@ def train(accelerator, source_loader, gendata_loader, target_train_loader, targe
                 # clf_loss, transfer_loss = model(args, data_source, data_gen, data_target, label_source, label_gen, data_target_strong, label_set)
                 loss = clf_loss + transfer_loss
                 
-                print(loss)
+                # print(loss)
                 # loss.backward()
                 accelerator.backward(loss)
-                param_dict = {name: param for name, param in model.named_parameters()}
-                if i%1 == 0:
-                    if torch.cuda.device_count() == 1:
-                        print(param_dict['classifier_layer.2.weight'].grad)
-                    else:
-                        print(param_dict['module.classifier_layer.2.weight'].grad)
-                        param_dict = {name: param for name, param in model.named_parameters()}
+                # param_dict = {name: param for name, param in model.named_parameters()}
+                # if i%1 == 0:
+                #     if torch.cuda.device_count() == 1:
+                #         print(param_dict['classifier_layer.2.weight'].grad)
+                #     else:
+                #         print(param_dict['module.classifier_layer.2.weight'].grad)
+                #         param_dict = {name: param for name, param in model.named_parameters()}
                 optimizer.step()
 
             if args.rst:
@@ -358,8 +358,8 @@ def main():
     set_seed(args.seed)
     dataloader_config = DataLoaderConfiguration()
     dataloader_config.split_batches=True
-    dataloader_config.use_seedable_sampler = True
-    dataloader_config.dispatch_batches = True
+    # dataloader_config.use_seedable_sampler = True
+    # dataloader_config.dispatch_batches = True
     # accelerator = Accelerator(dataloader_config=dataloader_config)
     kwargs = DistributedDataParallelKwargs(find_unused_parameters=True)
     accelerator = Accelerator(kwargs_handlers=[kwargs], step_scheduler_with_optimizer=False, dataloader_config=dataloader_config)
@@ -387,9 +387,9 @@ def main():
     model, optimizer, source_loader, target_train_loader, target_test_loader, gendata_loader, scheduler = accelerator.prepare(
         model, optimizer, source_loader, target_train_loader, target_test_loader, gendata_loader, scheduler
     )
-    gendata_loader.get_sampler().initial_seed = 8314211556539077902
-    source_loader.get_sampler().initial_seed = 1819927849474927636
-    target_train_loader.get_sampler().initial_seed = 2877591057541362902
+    # gendata_loader.get_sampler().initial_seed = 8314211556539077902
+    # source_loader.get_sampler().initial_seed = 1819927849474927636
+    # target_train_loader.get_sampler().initial_seed = 2877591057541362902
     print(f"Base Network: {args.model_name}")
     print(f"Source Domain: {args.src_domain}")
     print(f"Target Domain: {args.tgt_domain}")
