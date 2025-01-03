@@ -232,8 +232,6 @@ def train(source_loader, gendata_loader, target_train_loader, target_test_loader
     else:
         iter_gen_flux = None
     
-    # preds_target = np.load("/kaggle/working/SWG/Predictions/DAPL/OH/ViT/" + args.src_domain.lower()[0] + "2" + args.tgt_domain.lower()[0] + "_target_42.npy")
-    # print(preds_target.shape)
     preds_target = np.load("/kaggle/working/SWG/Predictions/DAPL/OH/ViT/" + args.src_domain.lower()[0] + "2" + args.tgt_domain.lower()[0] + "_target_42.npy")
     preds_target = torch.from_numpy(preds_target)
     # preds_target = torch.load("/kaggle/input/pre-dapl/predictions_dapl/" + args.src_domain.lower()[0] + "2" + args.tgt_domain.lower()[0] + "_1.pt")
@@ -254,14 +252,14 @@ def train(source_loader, gendata_loader, target_train_loader, target_test_loader
         for i in tqdm(iterable=range(n_batch),desc=f"Train:[{e}/{args.n_epoch}]"):
             optimizer.zero_grad()
             data_source, label_source, src_index = next(iter_source) # .next()
-            data_source, label_source, src_index = data_source[:16], label_source[:16], src_index[:16]
+            data_source, label_source, src_index = data_source[16:], label_source[16:], src_index[16:]
             print('src_index ', src_index)
             data_source, label_source = data_source.to(args.device), label_source.to(args.device)
             data_source = data_source
             label_source = label_source
             if args.gendata_dir:
                 data_gen_st, label_gen_st, gen_index = next(iter_gen)
-                data_gen_st, label_gen_st, gen_index = data_gen_st[:8], label_gen_st[:8], gen_index[:8]
+                data_gen_st, label_gen_st, gen_index = data_gen_st[8:], label_gen_st[8:], gen_index[8:]
                 data_gen_st = data_gen_st
                 label_gen_st = label_gen_st
                 print('gen_index ', gen_index)
@@ -281,7 +279,7 @@ def train(source_loader, gendata_loader, target_train_loader, target_test_loader
             else:
                 data_gen, label_gen = None, None
             data_target, _, tgt_index = next(iter_target) # .next()
-            data_target, tgt_index = data_target[:16], tgt_index[:16]
+            data_target, tgt_index = data_target[16:], tgt_index[16:]
             data_target = data_target
             tgt_index = tgt_index
             print('tgt_index ', tgt_index)
