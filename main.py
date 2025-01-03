@@ -234,9 +234,9 @@ def train(source_loader, gendata_loader, target_train_loader, target_test_loader
     
     # preds_target = np.load("/kaggle/working/SWG/Predictions/DAPL/OH/ViT/" + args.src_domain.lower()[0] + "2" + args.tgt_domain.lower()[0] + "_target_42.npy")
     # print(preds_target.shape)
-    preds_target = np.load("/kaggle/working/SWG/Predictions/DAPL/OH/ViT/" + args.src_domain.lower()[0] + "2" + args.tgt_domain.lower()[0] + "_target_42.npy")
-    preds_target = torch.from_numpy(preds_target)
-    # preds_target = torch.load("/kaggle/input/pre-dapl/predictions_dapl/" + args.src_domain.lower()[0] + "2" + args.tgt_domain.lower()[0] + "_1.pt")
+    # preds_target = np.load("/kaggle/working/SWG/Predictions/DAPL/OH/ViT/" + args.src_domain.lower()[0] + "2" + args.tgt_domain.lower()[0] + "_target_42.npy")
+    # preds_target = torch.from_numpy(preds_target)
+    preds_target = torch.load("/kaggle/input/pre-dapl/predictions_dapl/" + args.src_domain.lower()[0] + "2" + args.tgt_domain.lower()[0] + "_1.pt")
     best_acc = 0
     for e in range(1, args.n_epoch+1):
         if args.pda:
@@ -256,8 +256,12 @@ def train(source_loader, gendata_loader, target_train_loader, target_test_loader
             data_source, label_source, src_index = next(iter_source) # .next()
             print('src_index ', src_index)
             data_source, label_source = data_source.to(args.device), label_source.to(args.device)
+            data_source = data_source
+            label_source = label_source
             if args.gendata_dir:
                 data_gen_st, label_gen_st, gen_index = next(iter_gen)
+                data_gen_st = data_gen_st
+                label_gen_st = label_gen_st
                 print('gen_index ', gen_index)
             if hasattr(args, 'folder_gen_flux'):
                 data_gen_flux, label_gen_flux, _ = next(iter_gen_flux)
@@ -275,6 +279,8 @@ def train(source_loader, gendata_loader, target_train_loader, target_test_loader
             else:
                 data_gen, label_gen = None, None
             data_target, _, tgt_index = next(iter_target) # .next()
+            data_target = data_target
+            tgt_index = tgt_index
             print('tgt_index ', tgt_index)
             data_target_strong = None
             if args.fixmatch:
