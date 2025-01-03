@@ -383,9 +383,17 @@ def main():
         scheduler = get_lr_scheduler(optimizer,args)
     else:
         scheduler = None
+
+    print('id ', id(model))
+    print('optimizer ', id(optimizer))
+    print('schduler ', id(scheduler))
     model, optimizer, source_loader, target_train_loader, target_test_loader, gendata_loader, scheduler = accelerator.prepare(
         model, optimizer, source_loader, target_train_loader, target_test_loader, gendata_loader, scheduler
     )
+
+    print('id ', id(model))
+    print('optimizer ', id(optimizer))
+    print('schduler ', id(scheduler))
     # gendata_loader.get_sampler().initial_seed = 8314211556539077902
     # source_loader.get_sampler().initial_seed = 1819927849474927636
     # target_train_loader.get_sampler().initial_seed = 2877591057541362902
