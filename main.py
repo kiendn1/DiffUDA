@@ -14,6 +14,7 @@ import os
 from models import rst
 import logging
 import json
+from accelerate.utils import set_seed
 
 from torch.cuda.amp import GradScaler, autocast
 ssl._create_default_https_context = ssl._create_unverified_context
@@ -341,6 +342,7 @@ def main():
     parser = get_parser()
     args = parser.parse_args()
     set_random_seed(args.seed)
+    set_seed(args.seed)
     if args.use_img2img:
         name_folder = args.src_domain[0]+'2'+args.tgt_domain[0]
         setattr(args, "folder_gen_flux", '/home/user/code/DiffUDA/images/flux/'+name_folder)
