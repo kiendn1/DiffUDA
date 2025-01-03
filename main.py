@@ -279,8 +279,7 @@ def train(accelerator, source_loader, gendata_loader, target_train_loader, targe
             try:
                 data_target, _, tgt_index = next(iter_target) # .next()
                 # print('tgt_index ', tgt_index)
-            except e:
-                # print(e)
+            except:
                 iter_target = iter(target_train_loader)
                 data_target, _, tgt_index = next(iter_target) # .next()
             data_target_strong = None
