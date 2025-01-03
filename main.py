@@ -162,7 +162,7 @@ def get_lr_scheduler(optimizer, args):
     return scheduler
 
 
-def test(accelerator, model, target_test_loader, args):
+def accelerate_test(accelerator, model, target_test_loader, args):
     model.eval()
     accurate = 0
     num_elems = 0
@@ -189,6 +189,30 @@ def test(accelerator, model, target_test_loader, args):
     test_loss = test_loss.item() / num_elems
     print('num_elems: ', num_elems)
     return acc, test_loss 
+
+def test(model, target_test_loader, args):
+    model.eval()
+    test_loss = AverageMeter()
+    criterion = torch.nn.CrossEntropyLoss()
+    first_test = True
+    desc = "Clip Testing..." if args.clip else "Testing..."
+    with torch.no_grad():
+        for data, target, _ in tqdm(iterable=target_test_loader,desc=desc):
+            data, target = data.to(args.device), target.to(args.device)
+            if args.clip:
+                s_output = model.clip_predict(data)
+            else:
+                s_output = model.predict(data)
+            loss = criterion(s_output, target)
+            test_loss.update(loss.item())
+            pred = torch.max(s_output, 1)[1]
+            if first_test:
+                all_pred = pred
+                all_label = target
+                first_test = False
+            else:
+                all_pred = torch.cat((all_pred, pred), 0)
+                all_label = torch.cat((all_label, target), 0)
 
 def obtain_label(model,loader,e,args):
     # For partial-set domain adaptation on the office-home benchmark
@@ -331,8 +355,11 @@ def train(accelerator, source_loader, gendata_loader, target_train_loader, targe
             test_acc, test_per_class_acc, test_loss = test(accelerator, model, target_test_loader, args)
             info += ', test_loss {:4f}, test_acc: {:.4f} \nper_class_acc: {}'.format(test_loss, test_acc, test_per_class_acc)
         else:
-            test_acc, test_loss = test(accelerator, model, target_test_loader, args)
-            info += ', test_loss {:4f}, test_acc: {:.4f}'.format(test_loss, test_acc)
+            # test_acc, test_loss = accelerate_test(accelerator, model, target_test_loader, args)
+            if accelerator.is_main_process:
+                unwrapped_model = accelerator.unwrap_model(model).to('cuda:0')
+                test_acc, test_loss = test(unwrapped_model, target_test_loader, args)
+                info += ', test_loss {:4f}, test_acc: {:.4f}'.format(test_loss, test_acc)
 
         if args.rst:
             dsp = rst.dsp_calculation(model)
@@ -353,8 +380,8 @@ def train(accelerator, source_loader, gendata_loader, target_train_loader, targe
 def main():
     parser = get_parser()
     args = parser.parse_args()
-    set_random_seed(args.seed)
-    set_seed(args.seed)
+    # set_random_seed(args.seed)
+    # set_seed(args.seed)
     dataloader_config = DataLoaderConfiguration()
     dataloader_config.split_batches=True
     # dataloader_config.use_seedable_sampler = True
@@ -383,17 +410,9 @@ def main():
         scheduler = get_lr_scheduler(optimizer,args)
     else:
         scheduler = None
-
-    print('id ', id(model))
-    print('optimizer ', id(optimizer))
-    print('schduler ', id(scheduler))
-    model, optimizer, source_loader, target_train_loader, target_test_loader, gendata_loader, scheduler = accelerator.prepare(
-        model, optimizer, source_loader, target_train_loader, target_test_loader, gendata_loader, scheduler
+    model, optimizer, source_loader, target_train_loader, gendata_loader, scheduler = accelerator.prepare(
+        model, optimizer, source_loader, target_train_loader, gendata_loader, scheduler
     )
-
-    print('id ', id(model))
-    print('optimizer ', id(optimizer))
-    print('schduler ', id(scheduler))
     # gendata_loader.get_sampler().initial_seed = 8314211556539077902
     # source_loader.get_sampler().initial_seed = 1819927849474927636
     # target_train_loader.get_sampler().initial_seed = 2877591057541362902
