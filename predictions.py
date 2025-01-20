@@ -168,7 +168,7 @@ def main():
     set_random_seed(args.seed)
     source_loader, target_train_loader, target_test_loader, gendata_loader, gendata_loader_flux, num_class = load_data(args)
     setattr(args, "num_class", num_class)
-    setattr(args, "max_iter", 15000)
+    setattr(args, "max_iter", 10000)
     setattr(args, "device", torch.device('cuda' if torch.cuda.is_available() else 'cpu'))
     model = get_model(args)
     

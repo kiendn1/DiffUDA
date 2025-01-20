@@ -29,7 +29,7 @@ class CMKD(nn.Module):
         return coe
 
     def gini_impurity(self,pred,coe=1.0):
-        sum_dim = torch.sum(pred, dim=0).unsqueeze(dim=0).detach()
+        sum_dim = torch.sum(pred, dim=0).unsqueeze(dim=0).detach() + 1e-6
         return torch.sum(coe * (1 - torch.sum(pred ** 2 / sum_dim, dim=-1)))
 
     def regularization_term(self, target_pred_clip, source_logit_clip, source_label,lamb, **kwargs):
@@ -66,7 +66,6 @@ class CMKD(nn.Module):
             task_loss = self.args.lambda1 * lamb * self.gini_impurity(target_pred[:,label_set], coe)
             distill_loss = self.args.lambda1 * lamb * self.gini_impurity(target_pred_mix[:,label_set], 1 - coe)
             if 'gen_logit_clip' in kwargs:
-                print('hi')
                 reg_loss = self.regularization_term(target_pred_clip[:,label_set], source_logit_clip, source_label, lamb, 
                                                     gen_logit_clip=kwargs['gen_logit_clip'], gen_label=kwargs['gen_label'])
             else:

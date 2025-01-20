@@ -7,6 +7,7 @@ from torchvision.transforms import InterpolationMode
 BICUBIC = InterpolationMode.BICUBIC
 from torchvision.transforms import Compose, Resize, CenterCrop, ToTensor, Normalize
 from utils.folder import ImageFolder
+from torchvision.transforms.functional import InterpolationMode
 
 class toRGB(nn.Module):
     def forward(self, x):
@@ -103,6 +104,23 @@ def load_data(args, data_folder, batch_size, train, num_workers=4, weight_sample
                     transforms.ToTensor(),
                     transforms.Normalize(mean,std)])
         }
+    # elif args.use_dapl:
+    #     transform = {
+    #         'train': transforms.Compose(
+    #             [
+    #                 transforms.Lambda(lambda x: x.convert("RGB")),
+    #                 transforms.RandomResizedCrop(size=(224, 224), scale=(0.08, 1.0), interpolation=InterpolationMode.BICUBIC),
+    #                 transforms.RandomHorizontalFlip(),
+    #                 transforms.ToTensor(),
+    #                 transforms.Normalize(mean,std)]),
+    #         'test': transforms.Compose(
+    #             [
+    #                 transforms.Lambda(lambda x: x.convert("RGB")),
+    #                 transforms.Resize(224, interpolation=InterpolationMode.BICUBIC),
+    #                 transforms.CenterCrop((224,224)),
+    #                 transforms.ToTensor(),
+    #                 transforms.Normalize(mean,std)])
+    #     }
     else:
         transform = {
             'train': transforms.Compose(

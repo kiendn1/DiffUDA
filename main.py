@@ -15,7 +15,7 @@ from models import rst
 import logging
 import json
 
-from torch.cuda.amp import GradScaler, autocast
+from torch.amp import GradScaler, autocast
 ssl._create_default_https_context = ssl._create_unverified_context
 scaler = GradScaler()
 def get_parser():
@@ -55,6 +55,8 @@ def get_parser():
     parser.add_argument('--pda', default=False, action='store_true')
     parser.add_argument('--rst', default=False, action='store_true')
     parser.add_argument('--clip', default=False, action='store_true')
+    parser.add_argument('--use_dapl', default=False, action='store_true')
+    parser.add_argument('--use_preds', default=False, action='store_true')
 
     # FixMatch
     parser.add_argument('--fixmatch', default=False, action='store_true')
@@ -218,7 +220,7 @@ def obtain_label(model,loader,e,args):
     return class_set
 
 def train(source_loader, gendata_loader, target_train_loader, target_test_loader, model, optimizer, scheduler, args, gendata_loader_flux):
-    # logging.basicConfig(filename=os.path.join(args.log_dir,'training.log'), level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+    logging.basicConfig(filename=os.path.join(args.log_dir,'training.log'), level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s', force=True)
     n_batch = args.n_iter_per_epoch
     iter_source, iter_target = iter(source_loader), iter(target_train_loader)
     if args.gendata_dir:
@@ -230,8 +232,6 @@ def train(source_loader, gendata_loader, target_train_loader, target_test_loader
     else:
         iter_gen_flux = None
     
-    preds_target = np.load("/home/user/code/SWG/Predictions/DAPL/OH/ViT/" + args.src_domain.lower()[0] + "2" + args.tgt_domain.lower()[0] + "_target_42.npy")
-    print(preds_target.shape)
     best_acc = 0
     for e in range(1, args.n_epoch+1):
         if args.pda:
@@ -274,9 +274,13 @@ def train(source_loader, gendata_loader, target_train_loader, target_test_loader
                 data_target, data_target_strong = data_target.to(args.device), data_target_strong.to(args.device)
             else:
                 data_target = data_target.to(args.device)
+            if args.use_preds:
+                preds_target = torch.load(f'/home/user/code/DAPrompt/output/predictions/{args.src_domain.lower()[0]}2{args.tgt_domain.lower()[0]}.pt', weights_only=True)
+                # preds_target = torch.load('/home/user/code/diffuda/exp/a2c_0.pt', weights_only=True)
+                # preds_target = np.load("/home/user/code/SWG/Predictions/DAPL/OH/ViT/" + args.src_domain.lower()[0] + "2" + args.tgt_domain.lower()[0] + "_target_42.npy")
             if args.use_amp:
                 # mixture precision
-                with autocast():
+                with autocast("cuda"):
                     clf_loss, transfer_loss = model(args, data_source, data_gen, data_target, label_source, label_gen, data_target_strong)
                     loss = clf_loss + transfer_loss
                 scaler.scale(loss).backward()
@@ -284,7 +288,10 @@ def train(source_loader, gendata_loader, target_train_loader, target_test_loader
                 scaler.update()
             else:
                 # fully precision
-                clf_loss, transfer_loss = model(args, data_source, data_gen, data_target, label_source, label_gen, data_target_strong, label_set, tgt_index=tgt_index, preds_target=preds_target)
+                if args.use_preds:
+                    clf_loss, transfer_loss = model(args, data_source, data_gen, data_target, label_source, label_gen, data_target_strong, label_set, tgt_index=tgt_index, preds_target=preds_target)
+                else:
+                    clf_loss, transfer_loss = model(args, data_source, data_gen, data_target, label_source, label_gen, data_target_strong, label_set)
                 loss = clf_loss + transfer_loss
                 loss.backward()
                 optimizer.step()
@@ -318,7 +325,7 @@ def train(source_loader, gendata_loader, target_train_loader, target_test_loader
             best_acc = test_acc
             save_model(model,args)
 
-        # logging.info(info)
+        logging.info(info)
         tqdm.write(info)
         time.sleep(1)
 
@@ -335,17 +342,15 @@ def main():
     source_loader, target_train_loader, target_test_loader, gendata_loader, gendata_loader_flux, num_class = load_data(args)
     setattr(args, "num_class", num_class)
     setattr(args, "max_iter", 10000)
-    # log_dir = f'log/200_32_text2img_resizemix_quality_threshold_09/{args.model_name}/{args.datasets}/{args.src_domain}2{args.tgt_domain}'
-    # log_dir = f'log/200_32_text2img_resizemix_fixmatch/{args.model_name}/{args.datasets}/{args.src_domain}2{args.tgt_domain}'
-    # if not os.path.exists(log_dir):
-    #     os.makedirs(log_dir)
-    # setattr(args, "log_dir", log_dir)
-    # filename = f'{log_dir}/config.json'
-    # with open(filename, 'w') as json_file:
-    #     json.dump(vars(args), json_file, indent=4)
+    log_dir = f'log/200_32_dapl_cutmix/{args.model_name}/{args.datasets}/{args.src_domain}2{args.tgt_domain}'
+    if not os.path.exists(log_dir):
+        os.makedirs(log_dir)
+    setattr(args, "log_dir", log_dir)
+    filename = f'{log_dir}/config.json'
+    with open(filename, 'w') as json_file:
+        json.dump(vars(args), json_file, indent=4)
     setattr(args, "device", torch.device('cuda' if torch.cuda.is_available() else 'cpu'))
     model = get_model(args)
-    # print(model)
     optimizer = get_optimizer(model, args)
 
     if args.scheduler:

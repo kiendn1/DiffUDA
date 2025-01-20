@@ -6,7 +6,7 @@ import logging
 import torch.nn.functional as F
 import copy
 import numpy as np
-from utils.calculate_prototype import init_prototype, calculate_mean_vector_by_label, calculate_mean_vector_by_output
+# from utils.calculate_prototype import init_prototype, calculate_mean_vector_by_label, calculate_mean_vector_by_output
 
 _logger = logging.getLogger(__name__)
 
@@ -125,7 +125,7 @@ class TransferNet(nn.Module):
             if tgt_index is None:
                 target_clip_logits = self.base_network.forward_head(target_feat)
             else:
-                target_clip_logits = torch.from_numpy(preds_target[tgt_index]).cuda()
+                target_clip_logits = preds_target[tgt_index].cuda()
             target_logits = self.classifier_layer(target_feat)
             # calculate calibrated gini impurity loss Lcgi
             transfer_loss, target_pred_mix = self.cmkd(target_logits, target_clip_logits, source_logits_clip, source_label,label_set)

@@ -130,7 +130,7 @@ def load_data(args):
     target_train_loader, _ = data_loader.load_data(
         args, folder_tgt, 32, infinite_data_loader=True, train=True, use_fixmatch=use_fixmatch, num_workers=args.num_workers, partial=args.pda)
     target_test_loader, _ = data_loader.load_data(
-        args, folder_tgt, 1, infinite_data_loader=False, train=False, num_workers=args.num_workers, partial=args.pda)
+        args, folder_tgt, 32, infinite_data_loader=False, train=False, num_workers=args.num_workers, partial=args.pda)
     return source_loader, target_train_loader, target_test_loader, gen_loader, gen_loader_flux, n_class
 
 def get_model(args):
@@ -142,9 +142,9 @@ def predict(target_test_loader, model, args):
     list_r = []
     first_test = True
     with torch.no_grad():
-        for data, target in tqdm(iterable=target_test_loader):
+        for data, target, _ in tqdm(iterable=target_test_loader):
             data, target = data.to(args.device), target.to(args.device)
-            s_output = model.predict(data)
+            s_output = model.clip_predict(data)
             list_r.append(s_output)
             pred = torch.max(s_output, 1)[1]
             if first_test:
@@ -155,7 +155,7 @@ def predict(target_test_loader, model, args):
                 all_pred = torch.cat((all_pred, pred), 0)
                 all_label = torch.cat((all_label, target), 0)
     result = torch.cat(list_r, dim = 0)
-    torch.save(result, f'/kaggle/working/{args.src_domain.lower()[0]}2{args.tgt_domain.lower()[0]}_{int(args.use_dapl)}.pt')
+    torch.save(result, f'exp/{args.src_domain.lower()[0]}2{args.tgt_domain.lower()[0]}_{int(args.use_dapl)}.pt')
     acc = torch.sum(torch.squeeze(all_pred).float() == all_label) / float(all_label.size()[0]) * 100
 
     print('CLIP: test_acc: {:.4f}'.format(acc))
@@ -168,10 +168,9 @@ def main():
     set_random_seed(args.seed)
     source_loader, target_train_loader, target_test_loader, gendata_loader, gendata_loader_flux, num_class = load_data(args)
     setattr(args, "num_class", num_class)
-    setattr(args, "max_iter", 15000)
+    setattr(args, "max_iter", 10000)
     setattr(args, "device", torch.device('cuda' if torch.cuda.is_available() else 'cpu'))
     model = get_model(args)
-    load_checkpoint(model, args)
     predict(target_test_loader, model, args)
 
 if __name__ == "__main__":

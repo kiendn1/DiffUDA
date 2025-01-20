@@ -6,10 +6,7 @@ from clip.simple_tokenizer import SimpleTokenizer as _Tokenizer
 import torch
 import torch.nn as nn
 
-from dassl.engine import TRAINER_REGISTRY, TrainerXU
-from dassl.metrics import compute_accuracy
-from dassl.utils import MetricMeter, AverageMeter, load_pretrained_weights, load_checkpoint, save_checkpoint
-from dassl.optim import build_optimizer, build_lr_scheduler
+from dassl.utils import load_checkpoint
 
 from clip import clip
 from clip.simple_tokenizer import SimpleTokenizer as _Tokenizer
@@ -46,6 +43,7 @@ class CLIP(nn.Module):
         self.text = clip.tokenize(class_list).cuda()
         text_features = self.encode_text().detach().cuda()
         self.text_features = text_features / text_features.norm(dim=1, keepdim=True)
+        # self.text_features = torch.load('/home/user/code/DAPrompt/feat_text.pt')
             
     def forward_features(self, x):
         feature = self.model.encode_image(x)
@@ -75,7 +73,7 @@ class CLIP(nn.Module):
 
 def load_clip_to_cpu(backbone_name):
     url = clip._MODELS[backbone_name]
-    model_path = clip._download(url, '/kaggle/output/models')
+    model_path = clip._download(url, '/home/user/code/diffuda/clip')
     try:
         # loading JIT archive
         model = torch.jit.load(model_path, map_location="cpu").eval()
@@ -172,19 +170,14 @@ def get_text_features(args, model_path, backbone_name, classnames):
     )
     prompts = torch.cat([prompts, neb], dim=0)
 
-    prompts = prompts.reshape(195,1,77,512)
-    tokenized_prompts = tokenized_prompts.reshape(195,1,77)
-    list_r = []
     with torch.no_grad():
-        for i in range(195):
-            x = prompts[i] + clip_model.positional_embedding.type(dtype)
-            x = x.permute(1, 0, 2)  # NLD -> LND
-            x = clip_model.transformer(x)
-            x = x.permute(1, 0, 2)  # LND -> NLD
-            x = clip_model.ln_final(x).type(dtype)
-            x = x[torch.arange(x.shape[0]), tokenized_prompts[i].argmax(dim=-1)] @ clip_model.text_projection
-            list_r.append(x)
-        text_features = torch.cat(list_r, dim=0)
+        x = prompts + clip_model.positional_embedding.type(dtype)
+        x = x.permute(1, 0, 2)  # NLD -> LND
+        x = clip_model.transformer(x)
+        x = x.permute(1, 0, 2)  # LND -> NLD
+        x = clip_model.ln_final(x).type(dtype)
+        x = x[torch.arange(x.shape[0]), tokenized_prompts.argmax(dim=-1)] @ clip_model.text_projection
+        text_features = x
         text_features = text_features / text_features.norm(dim=-1, keepdim=True)
 
     return text_features
@@ -208,8 +201,9 @@ class CustomCLIP(nn.Module):
         self.args = args
         self.logit_scale = model.logit_scale
         self.dtype = model.dtype
-        model_path = f'/kaggle/input/cp-dapl/cp-daprompt/{args.src_domain.lower()[0]}2{args.tgt_domain.lower()[0]}_seed42_model.pth.tar-200'
-        self.text_features = get_text_features(args, model_path, "ViT-B/16", classnames).cuda()
+        # model_path = f'../DAPrompt/output/officehome/DAPL/ep200-32-csc/sgd/lr3e-3/{args.src_domain.lower()[0]}2{args.tgt_domain.lower()[0]}_seed42/t0/prompt_learner/model.pth.tar-200'
+        # self.text_features = get_text_features(args, model_path, "ViT-B/16", classnames).cuda()
+        self.text_features = torch.load('/home/user/code/DAPrompt/feat_text.pt').cuda()
 
     def forward_features(self, x):
         feature = self.model.visual(x.type(self.dtype))
@@ -221,16 +215,16 @@ class CustomCLIP(nn.Module):
         return logits_per_image
     
     def forward_head(self,image_features, return_text_logit=False, src_image=False):
-        image_features = image_features / image_features.norm(dim=1, keepdim=True)
+        image_features = image_features / image_features.norm(dim=-1, keepdim=True)
 
         logit_scale = self.logit_scale.exp()
         logits_per_image = logit_scale * image_features @ self.text_features.t()
         logits_per_image = logits_per_image.reshape(
             -1, 3, 65)
         if src_image:
-            logits_per_image = logits_per_image[:,-1,:]
+            logits_per_image = logits_per_image[:,0,:]
         else:
-            logits_per_image = logits_per_image[:,-2,:]
+            logits_per_image = logits_per_image[:,1,:]
         
         logits_per_text = logits_per_image.t()
         if return_text_logit:
